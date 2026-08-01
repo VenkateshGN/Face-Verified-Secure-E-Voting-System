@@ -8,15 +8,15 @@
   <?php include 'includes/menubar.php'; ?>
 
   <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper" style="background-color: #F1E9D2 " >
+  <div class="content-wrapper">
     <!-- Content Header (Page header) -->
-    <section class="content-header" style="color:black ; font-size: 17px; font-family:Times">
+    <section class="content-header">
       <h1><b>
-      📜 Dashboard 📜
+      Dashboard
       </b></h1>
-      <ol class="breadcrumb" style="color:black ; font-size: 17px; font-family:Times">
+      <ol class="breadcrumb">
         <li><a href="#"><i class="fa fa-dashboard" ></i> Home</a></li>
-        <li class="active" style="color:black ; font-size: 17px; font-family:Times" >Dashboard</li>
+        <li class="active">Dashboard</li>
       </ol>
     </section>
 
@@ -44,12 +44,12 @@
           unset($_SESSION['success']);
         }
       ?>
-      <!-- Small boxes (Stat box) -->
-      <div class="row"  >
-      <div class="col-lg-3 col-xs-6" style=" font-family:Times">
+          <!-- Small boxes (Stat box) -->
+      <div class="row">
+        <div class="col-lg-3 col-xs-6">
           <!-- small box -->
-          <div class="small-box" style="background-color: Red">
-            <div class="inner" style="background-color:#B0C4DE ;color:black ; font-size:15px;" >
+          <div class="small-box">
+            <div class="inner">
               <?php
                 $sql = "SELECT * FROM positions";
                 $query = $conn->query($sql);
@@ -57,43 +57,39 @@
                 echo "<h3>".$query->num_rows."</h3>";
               ?>
 
-              <p > <b >No. of Positions </b> </p>
+              <p>No. of Positions</p>
             </div>
             <div class="icon">
               <i class="fa fa-cog"></i>
             </div>
-            
-            <a href="positions.php" class="small-box-footer " style="background-color:#4682B4 ; color:black ; font-size:18px">More info <i class="fa fa-arrow-right"></i></a>
+            <a href="positions.php" class="small-box-footer">More info <i class="fa fa-arrow-right"></i></a>
           </div>
-          
         </div>
         <!-- ./col -->
-        <div class="col-lg-3 col-xs-6" style=" font-family:Times">
+        <div class="col-lg-3 col-xs-6">
           <!-- small box -->
-          <div class="small-box bg-green">
-            <div class="inner" style="background-color: 	#DEB887 ;color:black ; font-size:15px">
+          <div class="small-box">
+            <div class="inner">
               <?php
                 $sql = "SELECT * FROM candidates";
                 $query = $conn->query($sql);
 
-                echo "<h3  >".$query->num_rows."</h3>";
+                echo "<h3>".$query->num_rows."</h3>";
               ?>
           
-              <p> <b >No. of Candidates </b></p>
+              <p>No. of Candidates</p>
             </div>
             <div class="icon">
-              
              <i class="fa fa-black-tie"></i>
-             
             </div>
-            <a href="candidates.php" class="small-box-footer" style="background-color:	#8B4513 ;color:black ; font-size: 18px">More info <i class="fa fa-arrow-right"></i></a>
+            <a href="candidates.php" class="small-box-footer">More info <i class="fa fa-arrow-right"></i></a>
           </div>
         </div>
         <!-- ./col -->
-        <div class="col-lg-3 col-xs-6" style=" font-family:Times">
+        <div class="col-lg-3 col-xs-6">
           <!-- small box -->
-          <div class="small-box bg-yellow">
-          <div class="inner" style="background-color: #B59B91 ;color:black ; font-size:15px; font-family:Times">
+          <div class="small-box">
+            <div class="inner">
               <?php
                 $sql = "SELECT * FROM voters";
                 $query = $conn->query($sql);
@@ -101,19 +97,19 @@
                 echo "<h3>".$query->num_rows."</h3>";
               ?>
              
-              <p> <b >Total Voters </b></p>
+              <p>Total Voters</p>
             </div>
             <div class="icon">
               <i class="fa fa-users"></i>
             </div>
-            <a href="voters.php" class="small-box-footer "style="background-color:  #96837E ;color:black ; font-size: 18px">More info <i class="fa fa-arrow-right"></i></a>
+            <a href="voters.php" class="small-box-footer">More info <i class="fa fa-arrow-right"></i></a>
           </div>
         </div>
         <!-- ./col -->
-        <div class="col-lg-3 col-xs-6" style="color:black ; font-size: 15px; font-family:Times">
+        <div class="col-lg-3 col-xs-6">
           <!-- small box -->
-          <div class="small-box bg-red">
-          <div class="inner" style="background-color: #778899 ;color:black ; font-size:15px; font-family:Times">
+          <div class="small-box">
+            <div class="inner">
               <?php
                 $sql = "SELECT * FROM votes GROUP BY voters_id";
                 $query = $conn->query($sql);
@@ -121,74 +117,60 @@
                 echo "<h3>".$query->num_rows."</h3>";
               ?>
 
-              <p> <b>Voters Voted </b></p>
+              <p>Voters Voted</p>
             </div>
             <div class="icon">
               <i class="fa fa-edit"></i>
             </div>
-            <a href="votes.php" class="small-box-footer "style="background-color: #2F4F4F ;color:black ; font-size: 18px">More info <i class="fa fa-arrow-right"></i></a>
+            <a href="votes.php" class="small-box-footer">More info <i class="fa fa-arrow-right"></i></a>
           </div>
-        </div>
-        <!-- ./col -->
-      </div>
+        </div></div>
 
-      <div class="row" style="color:black ; font-size: 17px; font-family:Times">
-        <div class="col-xs-12" >
-          <h3> <b>VOTES TALLY
-            <span class="pull-right">
-            
-              <a href="print.php" class="btn btn-success btn-sm btn-curve" style="background-color: #2E8B57 ;color:black ; font-size: 12px; font-family:Times "><span class="glyphicon glyphicon-print"></span> Print</a>
-            </span>
-         </b> </h3>
-        </div>
-      </div>
-
-      <?php
-        $sql = "SELECT * FROM positions ORDER BY priority ASC";
-        $query = $conn->query($sql);
-        $inc = 2;
-        while($row = $query->fetch_assoc()){
-          $inc = ($inc == 2) ? 1 : $inc+1; 
-          if($inc == 1) echo "<div class='row'>";
-          echo "
-          
-           <div class='col-sm-6'  > 
-              <div class='box box-solid' style='background-color: #d8d1bd' >
-                <div class='box-header with-border' style='background-color: #d8d1bd'>
-                  <h4 class='box-title'><b>".$row['description']."</b></h4>
-                </div>
-                <div class='box-body' style='background-color: #d8d1bd'>
-                  <div class='chart' style='background-color: #d8d1bd'>
-                    <canvas id='".slugify($row['description'])."' style='height:200px  '></canvas>
-                  </div>
-                </div>
+      <!-- Main Dashboard Grid -->
+      <div class="row" style="margin-top: 20px;">
+        
+        <!-- Left Column: Votes Tally Charts -->
+        <div class="col-md-8">
+          <div class="box box-solid">
+            <div class="box-header with-border">
+              <h3 class="box-title"><b>📊 Live Election Results (Votes Tally)</b></h3>
+              <div class="box-tools pull-right">
+                <a href="print.php" class="btn btn-success btn-xs btn-curve"><span class="glyphicon glyphicon-print"></span> Print Results</a>
               </div>
             </div>
-            
-          ";
-          if($inc == 2) echo "</div>";  
-        }
-        if($inc == 1) echo "<div class='col-sm-6'></div></div>";
-      ?>
-
-      <!-- Tampered Votes Audit Panel -->
-      <div class="row" style="color:black ; font-size: 17px; font-family:Times; margin-top: 30px;">
-        <div class="col-xs-12">
-          <div class="box box-danger" style="background-color: #d8d1bd">
-            <div class="box-header with-border" style="background-color: #fce4d6; color: #c00000;">
-              <h3 class="box-title"><b>🚨 Cryptographic Tamper Alert Log</b></h3>
+            <div class="box-body" style="max-height: 480px; overflow-y: auto; padding: 20px;">
+              <?php
+                $sql = "SELECT * FROM positions ORDER BY priority ASC";
+                $query = $conn->query($sql);
+                while($row = $query->fetch_assoc()){
+                  echo "
+                    <div style='margin-bottom: 30px;'>
+                      <h4 style='color: var(--text-primary); font-weight: 700; margin-bottom: 12px;'>".$row['description']."</h4>
+                      <div class='chart' style='height: 160px; position: relative;'>
+                        <canvas id='".slugify($row['description'])."'></canvas>
+                      </div>
+                    </div>
+                  ";
+                }
+              ?>
             </div>
-            <div class="box-body" style="background-color: #fff;">
+          </div>
+        </div>
+
+        <!-- Right Column: Security Auditing Log -->
+        <div class="col-md-4">
+          <div class="box">
+            <div class="box-header with-border" style="background: rgba(239, 68, 68, 0.03) !important; border-bottom: 1px solid rgba(239, 68, 68, 0.1) !important;">
+              <h3 class="box-title" style="color: var(--danger-color) !important;"><b>🚨 System Tamper Audit Log</b></h3>
+            </div>
+            <div class="box-body" style="max-height: 480px; overflow-y: auto; padding: 15px;">
               <div class="table-responsive">
-                <table class="table table-bordered table-striped">
+                <table class="table table-condensed table-striped" style="font-size: 12px;">
                   <thead>
-                    <tr style="background-color: #f1f1f1; color: black; font-size: 14px;">
-                      <th>Vote ID</th>
-                      <th>Voter Name</th>
-                      <th>Position</th>
-                      <th>Stored Candidate (In Database)</th>
-                      <th>Original Candidate (Decrypted choice)</th>
-                      <th>Audit Status Details</th>
+                    <tr>
+                      <th>Voter</th>
+                      <th>Database vs Decrypted</th>
+                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -212,16 +194,13 @@
                             if(isset($verify['original_candidate_id'])){
                               $original_name = get_candidate_name($conn, $verify['original_candidate_id']);
                             } else {
-                              $original_name = "Corrupted/Unreadable Payload";
+                              $original_name = "Corrupted Payload";
                             }
                             echo "
-                              <tr style='background-color: #fce4d6; font-size: 14px;'>
-                                <td>".$vrow['vote_id']."</td>
-                                <td>".htmlspecialchars($vrow['votfirst'].' '.$vrow['votlast'])."</td>
-                                <td>".htmlspecialchars($vrow['pos_desc'])."</td>
-                                <td><b class='text-danger'>".htmlspecialchars($vrow['canfirst'].' '.$vrow['canlast'])."</b></td>
-                                <td><b class='text-success'>".htmlspecialchars($original_name)."</b></td>
-                                <td><span class='label label-danger'>Tampered</span> - <small>".htmlspecialchars($verify['details'])."</small></td>
+                              <tr class='bg-danger' style='color: var(--danger-color);'>
+                                <td><b>".htmlspecialchars($vrow['votfirst'].' '.$vrow['votlast'])."</b></td>
+                                <td>DB: ".htmlspecialchars($vrow['canfirst'].' '.$vrow['canlast'])."<br>Decrypted: ".htmlspecialchars($original_name)."</td>
+                                <td><span class='label label-danger'>TAMPERED</span></td>
                               </tr>
                             ";
                           }
@@ -230,8 +209,8 @@
                       if(!$tampered_found){
                         echo "
                           <tr>
-                            <td colspan='6' class='text-center text-success' style='padding: 20px; font-size: 16px;'>
-                              <i class='fa fa-check-circle'></i> <b>All vote integrity checks passed. No database tampering detected.</b>
+                            <td colspan='3' class='text-center text-success' style='padding: 40px 10px; font-size: 13px;'>
+                              <i class='fa fa-check-circle' style='font-size: 32px;'></i><br><br><b>All votes verified. No database tampering detected.</b>
                             </td>
                           </tr>
                         ";
@@ -243,6 +222,7 @@
             </div>
           </div>
         </div>
+
       </div>
 
       </section>
@@ -293,68 +273,54 @@
     ?>
     <script>
     $(function(){
-      var rowid = '<?php echo $row['id']; ?>';
       var description = '<?php echo slugify($row['description']); ?>';
-      var barChartCanvas = $('#'+description).get(0).getContext('2d')
-      var barChart = new Chart(barChartCanvas)
-      
-      var barChartData = {
-        labels  : <?php echo $carray; ?>,
-        
-        datasets: [
-          {
-            label               : 'Stored / DB Votes (With Tampering)',
-            fillColor           : 'rgba(217, 83, 79, 0.8)',
-            strokeColor         : 'rgba(217, 83, 79, 0.8)',
-            pointColor          : '#d9534f',
-            pointStrokeColor    : 'rgba(217,83,79,1)',
-            pointHighlightFill  : '#fff',
-            pointHighlightStroke: 'rgba(217,83,79,1)',
-            data                : <?php echo $rarray; ?>
+      var ctx = document.getElementById(description).getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: <?php echo $carray; ?>,
+          datasets: [
+            {
+              label: 'Stored / DB Votes (With Tampering)',
+              data: <?php echo $rarray; ?>,
+              backgroundColor: 'rgba(239, 68, 68, 0.85)',
+              borderColor: '#ef4444',
+              borderWidth: 1
+            },
+            {
+              label: 'Original Votes (Before Tampering)',
+              data: <?php echo $oarray; ?>,
+              backgroundColor: 'rgba(16, 185, 129, 0.85)',
+              borderColor: '#10b981',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                font: {
+                  family: "'Outfit', sans-serif",
+                  size: 12
+                }
+              }
+            }
           },
-          {
-            label               : 'Original Votes (Before Tampering)',
-            fillColor           : 'rgba(92, 184, 92, 0.8)',
-            strokeColor         : 'rgba(92, 184, 92, 0.8)',
-            pointColor          : '#5cb85c',
-            pointStrokeColor    : 'rgba(92,184,92,1)',
-            pointHighlightFill  : '#fff',
-            pointHighlightStroke: 'rgba(92,184,92,1)',
-            data                : <?php echo $oarray; ?>
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
           }
-        ]
-      }
-      var barChartOptions                  = {
-        //Boolean - Whether the scale should start at zero, or an order of magnitude down from the lowest value
-        scaleBeginAtZero        : true,
-        //Boolean - Whether grid lines are shown across the chart
-        scaleShowGridLines      : true,
-        //String - Colour of the grid lines
-        scaleGridLineColor      : 'rgba(0,0,0,.05)',
-        //Number - Width of the grid lines
-        scaleGridLineWidth      : 1,
-        //Boolean - Whether to show horizontal lines (except X axis)
-        scaleShowHorizontalLines: true,
-        //Boolean - Whether to show vertical lines (except Y axis)
-        scaleShowVerticalLines  : true,
-        //Boolean - If there is a stroke on each bar
-        barShowStroke           : true,
-        //Number - Pixel width of the bar stroke
-        barStrokeWidth          : 2,
-        //Number - Spacing between each of the X value sets
-        barValueSpacing         : 5,
-        //Number - Spacing between data sets within X values
-        barDatasetSpacing       : 1,
-        //String - A legend template
-        legendTemplate          : '<ul class="<%=name.toLowerCase()%>-legend"><% for (var i=0; i<datasets.length; i++){%><li><span style="background-color:<%=datasets[i].fillColor%>"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>',
-        //Boolean - whether to make the chart responsive
-        responsive              : true,
-        maintainAspectRatio     : true
-      }
-
-      barChartOptions.datasetFill = false
-      var myChart = barChart.HorizontalBar(barChartData, barChartOptions)
-      //document.getElementById('legend_'+rowid).innerHTML = myChart.generateLegend();
+        }
+      });
     });
     </script>
     <?php

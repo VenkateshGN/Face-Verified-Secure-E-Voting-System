@@ -9,7 +9,7 @@
   <?php include 'includes/menubar.php'; ?>
 
   <!-- Content Wrapper -->
-  <div class="content-wrapper" style="background-color:#F1E9D2 ">
+  <div class="content-wrapper">
 
     <!-- Content Header -->
     <section class="content-header">
@@ -18,15 +18,14 @@
         <b>Voters List</b>
       </h1>
 
-      <ol class="breadcrumb" style="color:black ; font-size: 17px; font-family:Times">
+      <ol class="breadcrumb">
         <li>
           <a href="#">
             <i class="fa fa-dashboard"></i> Home
           </a>
         </li>
 
-        <li class="active"
-          style="color:black ; font-size: 17px; font-family:Times">
+        <li class="active">
           Dashboard
         </li>
       </ol>
@@ -42,11 +41,9 @@
 
         <div class="col-xs-12">
 
-          <div class="box"
-            style="background-color: #d8d1bd">
+          <div class="box">
 
-            <div class="box-header with-border"
-              style="background-color: #d8d1bd">
+            <div class="box-header with-border">
 
               <a href="#addnew"
                 data-toggle="modal"

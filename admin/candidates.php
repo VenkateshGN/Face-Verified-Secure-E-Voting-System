@@ -7,7 +7,7 @@
 <?php include 'includes/navbar.php'; ?>
 <?php include 'includes/menubar.php'; ?>
 
-<div class="content-wrapper" style="background-color:#F1E9D2">
+<div class="content-wrapper">
 
 <section class="content-header">
   <h1><b>Candidates List</b></h1>
@@ -17,7 +17,7 @@
 
 
 
-<div class="box" style="background-color:#d8d1bd">
+<div class="box">
 
   <div class="box-header">
     <a href="#addnew" data-toggle="modal" class="btn btn-primary btn-sm">

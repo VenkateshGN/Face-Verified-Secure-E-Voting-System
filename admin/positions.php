@@ -7,25 +7,25 @@
   <?php include 'includes/menubar.php'; ?>
 
   <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper" style="background-color:#F1E9D2 ">
+  <div class="content-wrapper">
     <!-- Content Header (Page header) -->
     <section class="content-header">
       <h1><b>
         Positions
       </b></h1>
-      <ol class="breadcrumb" style="color:black ; font-size: 17px; font-family:Times">
+      <ol class="breadcrumb">
         <li><a href="#"><i class="fa fa-dashboard" ></i> Home</a></li>
-        <li class="active" style="color:black ; font-size: 17px; font-family:Times" >Dashboard</li>
+        <li class="active">Dashboard</li>
       </ol>
     </section>
     <!-- Main content -->
     <section class="content">
 
       <div class="row">
-        <div class="col-xs-12"  >
-          <div class="box"style="background-color: #d8d1bd" >
-            <div class="box-header with-border" style="background-color: #d8d1bd">
-              <a href="#addnew" data-toggle="modal" class="btn btn-primary btn-sm btn-curve  " style="background-color: #4682B4 ;color:black ; font-size: 12px; font-family:Times" ><i class="fa fa-plus "></i> New</a>
+        <div class="col-xs-12">
+          <div class="box">
+            <div class="box-header with-border">
+              <a href="#addnew" data-toggle="modal" class="btn btn-primary btn-sm btn-curve"><i class="fa fa-plus"></i> New</a>
             </div>
             <div class="box-body" >
               <table id="example1" class="table ">

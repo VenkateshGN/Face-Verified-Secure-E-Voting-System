@@ -7,15 +7,15 @@
   <?php include 'includes/menubar.php'; ?>
 
   <!-- Content Wrapper. Contains page content -->
-  <div class="content-wrapper" style="background-color:#F1E9D2 ;color:black ; font-size: 17px; font-family:Times ">
+  <div class="content-wrapper">
     <!-- Content Header (Page header) -->
-    <section class="content-header" style= "color:black ; font-size: 17px; font-family:Times">
+    <section class="content-header">
       <h1>
         VOTES
       </h1>
-      <ol class="breadcrumb" style="color:black ; font-size: 17px; font-family:Times">
+      <ol class="breadcrumb">
         <li><a href="#"><i class="fa fa-dashboard" ></i> Home</a></li>
-        <li class="active" style="color:black ; font-size: 17px; font-family:Times" >Dashboard</li>
+        <li class="active">Dashboard</li>
       </ol>
     </section>
     <!-- Main content -->
@@ -66,13 +66,13 @@
           </div>
         </div>
         <div class="col-lg-4 col-xs-6">
-          <div class="small-box" style="background-color: #F8D7DA; color: #721C24; border-radius: 8px;">
+          <div class="small-box" style="background-color: rgba(239, 68, 68, 0.1) !important; color: var(--danger-color) !important; border: 1px solid rgba(239, 68, 68, 0.2) !important;">
             <div class="inner" style="padding: 15px;">
-              <h3><?php echo $tampered_votes_count; ?></h3>
-              <p><b>Tampered (Invalid) Votes</b></p>
+              <h3 style="color: var(--danger-color) !important; font-weight: 800 !important; font-size: 38px !important; margin: 0 0 10px 0 !important;"><?php echo $tampered_votes_count; ?></h3>
+              <p style="color: var(--danger-color) !important; font-weight: 600 !important;">Tampered (Invalid) Votes</p>
             </div>
-            <div class="icon" style="top: 10px; right: 15px;">
-              <i class="fa fa-warning" style="font-size: 70px; opacity: 0.15;"></i>
+            <div class="icon" style="top: 10px; right: 15px; color: rgba(239, 68, 68, 0.1) !important;">
+              <i class="fa fa-warning" style="font-size: 70px;"></i>
             </div>
           </div>
         </div>
@@ -80,9 +80,9 @@
 
       <div class="row">
         <div class="col-xs-12">
-          <div class="box" style="background-color: #d8d1bd">
-            <div class="box-header with-border" style="background-color: #d8d1bd">
-              <a href="#reset" data-toggle="modal" class="btn btn-danger btn-sm btn-curve" style="background-color: #ff8e88;color:black ; font-size: 12px; font-family:Times"><i class="fa fa-refresh"></i> Reset</a>
+          <div class="box">
+            <div class="box-header with-border">
+              <a href="#reset" data-toggle="modal" class="btn btn-danger btn-sm btn-curve"><i class="fa fa-refresh"></i> Reset</a>
             </div>
             <div class="box-body">
               <table id="example1" class="table table-bordered">
