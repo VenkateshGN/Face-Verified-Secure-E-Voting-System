@@ -1,0 +1,254 @@
+/* Custom premium style overrides for Voting System */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* Root variables for Highly Light Green & Mint scheme (Light Mode) */
+:root {
+    --bg-primary: #f0fdf4; /* Very light green (Emerald 50) */
+    --bg-secondary: #dcfce7; /* Light green (Emerald 100) */
+    --bg-card: rgba(255, 255, 255, 0.85); /* Clean white glass plate */
+    --accent-color: #10b981; /* Emerald 500 */
+    --accent-hover: #059669; /* Emerald 600 */
+    --text-primary: #064e3b; /* Deep forest green (Emerald 900) */
+    --text-secondary: #047857; /* Emerald 700 */
+    --border-color: #a7f3d0; /* Emerald 200 */
+    --success-color: #10b981; /* Emerald 500 */
+    --danger-color: #ef4444; /* Red 500 */
+}
+
+/* Base style resets */
+body, body.login-page, body.hold-transition {
+    background: radial-gradient(circle at top right, #dcfce7, #f0fdf4) !important;
+    font-family: 'Outfit', sans-serif !important;
+    color: var(--text-primary) !important;
+}
+
+body.login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Glassmorphism card for login-box */
+.login-box {
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(20px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 15px 35px rgba(6, 78, 59, 0.1) !important;
+    color: var(--text-primary) !important;
+    padding: 35px !important;
+    width: 430px !important;
+    margin: 7% auto !important;
+}
+
+.login-logo {
+    margin-bottom: 30px !important;
+    text-shadow: 0 4px 10px rgba(16, 185, 129, 0.15);
+}
+
+.login-logo a, .login-logo b {
+    color: var(--text-primary) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px;
+    font-size: 28px !important;
+}
+
+.login-box-body {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+    padding: 0 !important;
+}
+
+.login-box-msg {
+    color: var(--text-secondary) !important;
+    font-size: 15px !important;
+    margin-bottom: 20px !important;
+    padding: 0 !important;
+}
+
+/* Modern inputs */
+.form-control {
+    background: #ffffff !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    color: var(--text-primary) !important;
+    height: 48px !important;
+    padding: 10px 18px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: none !important;
+}
+
+.form-control:focus {
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    background: #ffffff !important;
+}
+
+.form-control::placeholder {
+    color: #a7f3d0 !important;
+    opacity: 0.8;
+}
+
+/* Custom buttons */
+.btn-primary, .btn-primary:active, .btn-primary:focus {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    height: 48px !important;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3) !important;
+    filter: brightness(1.05);
+}
+
+.btn-primary:active {
+    transform: translateY(0) !important;
+}
+
+/* Admin Dashboard styling updates */
+.content-wrapper {
+    background: radial-gradient(circle at top, #f0fdf4, #e8f5e9) !important;
+    color: var(--text-primary) !important;
+}
+
+.box {
+    background: #ffffff !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 25px rgba(6, 78, 59, 0.05) !important;
+}
+
+.box-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    padding: 15px 20px !important;
+}
+
+.box-header .box-title {
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;
+}
+
+/* Custom tables */
+.table {
+    color: var(--text-secondary) !important;
+}
+
+.table th {
+    border-bottom: 2px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    border-top: 1px solid var(--border-color) !important;
+    vertical-align: middle !important;
+}
+
+.table-bordered {
+    border: 1px solid var(--border-color) !important;
+}
+
+.table-bordered th, .table-bordered td {
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Modals styling */
+.modal-content {
+    background-color: #ffffff !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 40px rgba(6, 78, 59, 0.1) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 20px !important;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color) !important;
+    padding: 15px 20px !important;
+    background: rgba(240, 253, 244, 0.5);
+}
+
+.modal-title, .modal-title b {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+.control-label {
+    color: var(--text-secondary) !important;
+}
+
+.modal-body {
+    padding: 25px !important;
+}
+
+.btn-curve {
+    border-radius: 8px !important;
+}
+
+/* Small widgets */
+.small-box {
+    border-radius: 16px !important;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(6, 78, 59, 0.05) !important;
+    border: 1px solid var(--border-color) !important;
+    background: #ffffff !important;
+}
+
+/* Emergency section inside face verification */
+.emergency {
+    background: rgba(240, 253, 244, 0.5) !important;
+    border: 1px dashed var(--border-color) !important;
+    border-radius: 12px;
+    padding: 15px !important;
+}
+
+.captcha {
+    background: rgba(16, 185, 129, 0.08) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid rgba(16, 185, 129, 0.15) !important;
+}
+
+.status {
+    color: #10b981 !important;
+    font-weight: 500;
+}
+
+/* Face video webcam container */
+video#video {
+    border: 3px solid var(--border-color) !important;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* SweetAlert2 styling overrides for matching light theme */
+.swal2-popup {
+    background: #ffffff !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 20px !important;
+}
+.swal2-title {
+    color: var(--text-primary) !important;
+}
+.swal2-html-container {
+    color: var(--text-secondary) !important;
+}
