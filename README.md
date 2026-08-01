@@ -1,8 +1,29 @@
-# 🗳️ Secure Online Voting System with Face & OTP Verification
+# 🗳️ Face-Verified Secure E-Voting System with OTP Authentication
 
-A highly secure, state-of-the-art web-based voting management application designed with a premium, responsive **Light Green & Mint** theme. The system enforces multi-factor voter authentication via biometrics (Python DeepFace face comparison) and one-time passwords (OTP).
+A secure, web-based electronic voting management system designed to provide reliable and tamper-resistant elections using multi-factor authentication.
+
+The system combines:
+
+🔐 Voter credential authentication
+👤 Face verification using DeepFace
+📱 OTP-based verification
+🛡️ Secure vote management
+📊 Admin monitoring and vote tally
+
+The application is built with a modern Light Green & Mint responsive UI theme and focuses on improving voter identity verification and election security.
 
 ---
+
+## Features
+
+- User Registration and Login
+- Face Verification Authentication
+- Secure Vote Casting
+- One Person One Vote Mechanism
+- Candidate Management
+- Admin Dashboard
+- Real-Time Vote Tally
+- Election Result Management
 
 ## 🎨 Interface & Screenshots
 
@@ -19,16 +40,10 @@ A highly secure, state-of-the-art web-based voting management application design
 ### Ballot Submission & Vote Tracking
 | Voter Ballot | Ballot Verification Preview | Already Voted Screen | Vote Records |
 |:---:|:---:|:---:|:---:|
-| ![Voter Ballot](Screen%20Shots/voter%20ballot.png) | ![Preview Vote](Screen%20Shots/preview%20vote.png) | ![Already Voted](Screen%20Shots/already_voted.png) | ![Votes Log](Screen%20Shots/votes.png) |
+| ![Voter Ballot](Screen%20Shots/voter%20ballot.png) | ![Preview Vote](Screen%20Shots/preview%20vote.png) | ![Already Voted](Screen%20Shots/already_voted.png)|
 
 ---
 
-## 🛡️ Database Diagrams & Structure
-
-### ER Diagram & Relational Model
-| OVS ER Diagram | Database Relational Model |
-|:---:|:---:|
-| ![OVS ER Diagram](Screen%20Shots/OVS%20ER%20Diagram.jpg) | ![Relational Model](Screen%20Shots/Relational%20Model.jpg) |
 
 ---
 
