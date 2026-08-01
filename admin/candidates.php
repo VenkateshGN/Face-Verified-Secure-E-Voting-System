@@ -146,7 +146,7 @@ function getRow(id){
       $('.id').val(response.id);
       $('#edit_firstname').val(response.firstname);
       $('#edit_lastname').val(response.lastname);
-      $('#edit_position').val(response.position_id);
+      $('#edit_position').val(response.description);
       $('#edit_platform').val(response.platform);
 
       $('.fullname').html(response.firstname + " " + response.lastname);

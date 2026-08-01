@@ -17,9 +17,9 @@ A highly secure, state-of-the-art web-based voting management application design
 | ![Dashboard](Screen%20Shots/dashboard_light_green.png) | ![Candidates List](Screen%20Shots/candidate_list_light_green.png) | ![Voters List](Screen%20Shots/voters_list_light_green.png) | ![Positions](Screen%20Shots/positions.png) |
 
 ### Ballot Submission & Vote Tracking
-| Voter Ballot | Ballot Verification Preview | Vote Records |
-|:---:|:---:|:---:|
-| ![Voter Ballot](Screen%20Shots/voter%20ballot.png) | ![Preview Vote](Screen%20Shots/preview%20vote.png) | ![Votes Log](Screen%20Shots/votes.png) |
+| Voter Ballot | Ballot Verification Preview | Already Voted Screen | Vote Records |
+|:---:|:---:|:---:|:---:|
+| ![Voter Ballot](Screen%20Shots/voter%20ballot.png) | ![Preview Vote](Screen%20Shots/preview%20vote.png) | ![Already Voted](Screen%20Shots/already_voted.png) | ![Votes Log](Screen%20Shots/votes.png) |
 
 ---
 

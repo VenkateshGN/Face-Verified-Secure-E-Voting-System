@@ -27,7 +27,7 @@ if(isset($_POST['id'])){
            FIX SYMBOL PATH
         ========================= */
         $row['symbol'] = (!empty($row['symbol']))
-            ? '../images/symbols/' . $row['symbol']
+            ? '../images/' . $row['symbol']
             : '../images/profile.jpg';
 
         /* =========================
