@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Manage Positions - Admin')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        <div class="glass-card p-4">
+            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge rounded-pill px-3 py-1" th:if="${electionSetting != null}" th:classappend="${electionSetting.organizationTypeBadgeClass}">
+                            <i th:class="${electionSetting.organizationTypeIcon} + ' me-1'"></i>
+                            <span th:text="${electionSetting.organizationTypeDisplayName}">Organization Type</span>
+                        </span>
+                        <h3 class="fw-bold text-success mb-0">Leadership Offices &amp; Positions</h3>
+                    </div>
+                    <p class="text-muted small mb-0">Configure election offices for schools, companies, or organizations with priority and selection limits.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/admin/dashboard" class="btn btn-outline-success rounded-pill px-3">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Organization Presets
+                    </a>
+                    <button class="btn btn-emerald rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addPositionModal">
+                        <i class="fa-solid fa-plus me-1"></i> Add Custom Office
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Priority</th>
+                            <th>Description / Office Title</th>
+                            <th>Target Organization / Company</th>
+                            <th>Allowed Electorate Scope</th>
+                            <th>Maximum Selections</th>
+                            <th>Candidates Enrolled</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pos : ${positions}">
+                            <td><span class="badge bg-secondary rounded-pill px-3 py-2" th:text="${pos.priority}">1</span></td>
+                            <td><strong class="text-dark" th:text="${pos.description}">MLA</strong></td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${pos.targetOrganizationBadgeClass}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${pos.targetOrganizationDisplayName}">Infosys</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${pos.electorateScopeBadgeClass}">
+                                    <i th:class="${pos.electorateScopeIcon} + ' me-1'"></i>
+                                    <span th:text="${pos.electorateScopeDisplayName}">Student Body Only</span>
+                                </span>
+                                <small class="text-muted d-block mt-1" th:if="${pos.targetDepartment != null and pos.targetDepartment != 'ALL'}">
+                                    Dept: <code th:text="${pos.targetDepartment}">Dept</code>
+                                </small>
+                            </td>
+                            <td><span class="badge bg-light text-dark border px-3 py-1" th:text="${pos.maxVote} + ' vote(s)'">1 vote</span></td>
+                            <td><span class="text-muted" th:text="${pos.candidates.size()} + ' candidate(s)'">0 candidates</span></td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-1" 
+                                        th:data-id="${pos.id}"
+                                        th:data-desc="${pos.description}"
+                                        th:data-max="${pos.maxVote}"
+                                        th:data-priority="${pos.priority}"
+                                        th:data-scope="${pos.electorateScope}"
+                                        th:data-dept="${pos.targetDepartment}"
+                                        th:data-org="${pos.targetOrganization}"
+                                        onclick="openEditModal(this.getAttribute('data-id'), this.getAttribute('data-desc'), this.getAttribute('data-max'), this.getAttribute('data-priority'), this.getAttribute('data-scope'), this.getAttribute('data-dept'), this.getAttribute('data-org'))">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </button>
+                                <form th:action="@{/admin/positions/delete}" method="POST" class="d-inline" onsubmit="return confirm('Delete this position and all associated candidates?');">
+                                    <input type="hidden" name="id" th:value="${pos.id}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(positions)}">
+                            <td colspan="7" class="text-center text-muted py-4">No positions defined yet. Click "Add Position" above.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Add Position Modal -->
+    <div class="modal fade" id="addPositionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success"><i class="fa-solid fa-plus-circle me-2"></i> Add New Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/positions/save}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Position Title / Office Description</label>
+                            <input type="text" name="description" class="form-control" placeholder="e.g. Student Council President / Board of Directors / Team Lead" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Target Company / Organization (Tenant Scoping)</label>
+                            <input type="text" name="targetOrganization" class="form-control" list="orgOptionsList" placeholder="e.g. Infosys, ALL" value="ALL" required>
+                            <datalist id="orgOptionsList">
+                                <option value="ALL">Open to All Organizations</option>
+                                <option value="Infosys">Infosys</option>
+                                <option value="Wipro">Wipro</option>
+                                <option value="TCS">TCS</option>
+                            </datalist>
+                            <div class="form-text small">Positions designated for <strong>Infosys</strong> (e.g. Cultural Event Organizer) can ONLY be viewed and voted on by Infosys employees.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Allowed Electorate Scope (Who can vote?)</label>
+                            <select name="electorateScope" class="form-select" required>
+                                <option value="OFFICE_ORGANIZATION" selected>🏢 Organization Office Event (Corporate / Staff only)</option>
+                                <option value="STUDENT">🎓 Student Body Only (Students only, office excluded)</option>
+                                <option value="FACULTY_STAFF">👥 Faculty &amp; Academic Staff Only</option>
+                                <option value="ALL">🌐 Open to All Electorates</option>
+                            </select>
+                            <div class="form-text small">Ensures voters only vote within their authorized electorate classification.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Target Department / Field (Optional)</label>
+                            <input type="text" name="targetDepartment" class="form-control" value="ALL" placeholder="ALL or specific field e.g. Cultural & Events Committee">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Max Votes Allowed</label>
+                                <input type="number" name="maxVote" class="form-control" value="1" min="1" max="10" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Ballot Priority Order</label>
+                                <input type="number" name="priority" class="form-control" value="1" min="1" max="100" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-emerald rounded-pill px-4">Save Position</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Position Modal -->
+    <div class="modal fade" id="editPositionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-pen-to-square me-2"></i> Edit Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/positions/save}" method="POST">
+                    <input type="hidden" name="id" id="editPosId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Position Title / Description</label>
+                            <input type="text" name="description" id="editPosDesc" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Target Company / Organization (Tenant Scoping)</label>
+                            <input type="text" name="targetOrganization" id="editPosOrg" class="form-control" list="orgOptionsList" placeholder="e.g. Infosys, ALL" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Allowed Electorate Scope</label>
+                            <select name="electorateScope" id="editPosScope" class="form-select" required>
+                                <option value="OFFICE_ORGANIZATION">🏢 Organization Office Event (Corporate / Staff only)</option>
+                                <option value="STUDENT">🎓 Student Body Only (Students only, office excluded)</option>
+                                <option value="FACULTY_STAFF">👥 Faculty &amp; Academic Staff Only</option>
+                                <option value="ALL">🌐 Open to All Electorates</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Target Department / Field</label>
+                            <input type="text" name="targetDepartment" id="editPosDept" class="form-control">
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Max Votes Allowed</label>
+                                <input type="number" name="maxVote" id="editPosMax" class="form-control" min="1" max="10" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Ballot Priority Order</label>
+                                <input type="number" name="priority" id="editPosPriority" class="form-control" min="1" max="100" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Update Position</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+
+    <script>
+        function openEditModal(id, desc, maxVote, priority, scope, dept, org) {
+            document.getElementById('editPosId').value = id;
+            document.getElementById('editPosDesc').value = desc;
+            document.getElementById('editPosMax').value = maxVote;
+            document.getElementById('editPosPriority').value = priority;
+            document.getElementById('editPosScope').value = scope || 'ALL';
+            document.getElementById('editPosDept').value = dept || 'ALL';
+            document.getElementById('editPosOrg').value = org || 'ALL';
+            new bootstrap.Modal(document.getElementById('editPositionModal')).show();
+        }
+    </script>
+</body>
+</html>

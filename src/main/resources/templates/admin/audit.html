@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Security & Tamper Audit Logs - Admin')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        
+        <!-- Organization Filter Pills for Super Admin -->
+        <div th:if="${isSuperAdmin}" class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 mb-4 rounded-4 bg-light border">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="text-muted fw-bold small"><i class="fa-solid fa-filter me-1 text-primary"></i> Scope Organization:</span>
+                <a th:href="@{/admin/audit(org='ALL')}" class="btn btn-sm rounded-pill px-3"
+                   th:classappend="${activeOrg == 'ALL' ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary'}">
+                    <i class="fa-solid fa-globe me-1"></i> All Security Logs
+                </a>
+                <a th:each="orgName : ${availableOrganizations}"
+                   th:href="@{/admin/audit(org=${orgName})}"
+                   class="btn btn-sm rounded-pill px-3"
+                   th:classappend="${activeOrg == orgName ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary'}">
+                    <i class="fa-solid fa-building me-1"></i> <span th:text="${orgName}">Infosys</span>
+                </a>
+            </div>
+            <div th:if="${isViewingSpecificOrg}">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                    Scope: <strong th:text="${activeOrg}">Infosys</strong>
+                </span>
+            </div>
+        </div>
+
+        <!-- Scoped Banner for Event Organizers -->
+        <div th:unless="${isSuperAdmin}" class="alert alert-info rounded-4 py-2 px-3 mb-4 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-building text-primary fs-5"></i>
+            <div>
+                Viewing security incident and activity audit trail for <strong><span th:text="${adminOrg}">Infosys</span></strong>. Security logs belonging to other organizations are strictly hidden.
+            </div>
+        </div>
+
+        <!-- Tamper Incident Logs -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4">
+                <div>
+                    <h4 class="fw-bold text-danger mb-1"><i class="fa-solid fa-triangle-exclamation me-2"></i> Tamper Incident Logs</h4>
+                    <p class="text-muted small mb-0">Unauthorized database modifications flagged by the cryptographic hash and AES decryptor.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-danger">
+                        <tr>
+                            <th>Incident ID</th>
+                            <th>Voter ID</th>
+                            <th>Target Vote ID</th>
+                            <th>Organization</th>
+                            <th>Action Trigger</th>
+                            <th>Origin IP</th>
+                            <th>Discrepancy Details</th>
+                            <th>Logged At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="t : ${tamperLogs}">
+                            <td><strong th:text="'#' + ${t.id}">#1</strong></td>
+                            <td><code th:text="${t.voterId}">VOTER_ID</code></td>
+                            <td><strong th:text="'Vote #' + ${t.voteId}">Vote #1</strong></td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${t.organization == 'Infosys' ? 'bg-primary text-white' : 'bg-secondary text-white'}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${t.organization}">Infosys</span>
+                                </span>
+                            </td>
+                            <td><span class="badge bg-danger" th:text="${t.action}">Action</span></td>
+                            <td><span th:text="${t.ipAddress}">127.0.0.1</span></td>
+                            <td><span class="text-danger fw-semibold" th:text="${t.reason}">Details</span></td>
+                            <td><small class="text-muted" th:text="${t.timestamp}">Timestamp</small></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(tamperLogs)}">
+                            <td colspan="8" class="text-center text-success py-3"><i class="fa-solid fa-circle-check me-1"></i> No tampering incidents detected in this scope. System is completely secure.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- System Audit Logs -->
+        <div class="glass-card p-4">
+            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4">
+                <div>
+                    <h4 class="fw-bold text-success mb-1"><i class="fa-solid fa-list-check me-2"></i> System Activity Audit Trail</h4>
+                    <p class="text-muted small mb-0">Immutable records of election milestones, ballot submissions, and administrative events.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Audit ID</th>
+                            <th>Event Action</th>
+                            <th>Organization</th>
+                            <th>Block / Vote Hash</th>
+                            <th>Origin IP</th>
+                            <th>Event Summary</th>
+                            <th>Logged At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="a : ${auditLogs}">
+                            <td><strong th:text="'#' + ${a.id}">#1</strong></td>
+                            <td><span class="badge bg-success bg-opacity-10 text-success" th:text="${a.action}">Action</span></td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${a.organization == 'Infosys' ? 'bg-primary text-white' : 'bg-light text-dark border'}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${a.organization}">Infosys</span>
+                                </span>
+                            </td>
+                            <td><code class="text-muted text-truncate d-inline-block" style="max-width: 160px;" th:text="${a.hashValue}">HASH</code></td>
+                            <td><span th:text="${a.ipAddress}">127.0.0.1</span></td>
+                            <td><span th:text="${a.details}">Details</span></td>
+                            <td><small class="text-muted" th:text="${a.timestamp}">Timestamp</small></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(auditLogs)}">
+                            <td colspan="6" class="text-center text-muted py-3">No activity logs recorded yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

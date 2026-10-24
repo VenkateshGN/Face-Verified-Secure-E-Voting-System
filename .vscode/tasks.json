@@ -1,0 +1,54 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Spring Boot: Run App",
+            "type": "shell",
+            "command": ".\\mvnw.cmd",
+            "args": ["spring-boot:run"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Spring Boot: Run with MySQL",
+            "type": "shell",
+            "command": ".\\mvnw.cmd",
+            "args": ["spring-boot:run", "-Dspring-boot.run.profiles=mysql"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Maven: Run Tests",
+            "type": "shell",
+            "command": ".\\mvnw.cmd",
+            "args": ["test"],
+            "group": "test",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Maven: Package JAR",
+            "type": "shell",
+            "command": ".\\mvnw.cmd",
+            "args": ["clean", "package"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

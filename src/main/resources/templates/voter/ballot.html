@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Official Ballot - Cast Your Vote')}"></head>
+<body class="d-flex flex-column justify-content-between">
+    <div th:replace="~{fragments/layout :: voterNavbar}"></div>
+
+    <main class="container py-4 my-auto">
+        <!-- Header Banner -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="badge bg-success bg-opacity-15 text-success rounded-pill px-3 py-1">
+                            <i class="fa-solid fa-vote-yea me-1"></i> Official Digital Ballot
+                        </span>
+                        <span class="badge rounded-pill px-3 py-1" th:if="${electionSetting != null}" th:classappend="${electionSetting.organizationTypeBadgeClass}">
+                            <i th:class="${electionSetting.organizationTypeIcon} + ' me-1'"></i>
+                            <span th:text="${electionSetting.organizationName}">Organization Name</span>
+                        </span>
+                    </div>
+                    <h2 class="fw-bold text-success mb-1" th:text="${electionSetting != null ? electionSetting.electionTitle : electionTitle}">National General Election</h2>
+                    <p class="text-muted small mb-0" th:text="${electionSetting != null ? electionSetting.electionSubtitle : 'Select your preferred candidates. Your ballot will be encrypted with AES-256 and cryptographically signed before writing to the immutable ledger.'}">Select your preferred candidates.</p>
+                </div>
+                <div class="text-end d-flex flex-column align-items-end gap-1">
+                    <span class="badge bg-primary text-white p-2 px-3 rounded-pill shadow-sm">
+                        <i class="fa-solid fa-building me-1"></i> <span th:text="${voter.organizationDisplayName}">Company</span>
+                    </span>
+                    <span class="badge bg-white border border-success text-success p-2 px-3 rounded-pill">
+                        <i class="fa-solid fa-user-check me-1"></i> <span th:text="${voter.fullName}">Voter</span>
+                        <span class="text-muted small ms-1" th:text="'(' + ${voter.voterId} + ')'">ID</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Election Countdown Timer Banner (if time limit active) -->
+        <div th:if="${timeLimitActive}" id="timerBanner" class="alert alert-light border border-success border-opacity-50 rounded-4 p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-sm bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div id="timerIconBox" class="p-3 rounded-circle bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-clock-rotate-left fa-2x"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-danger rounded-pill px-2 py-1 small">
+                            <i class="fa-solid fa-hourglass-half me-1"></i> Time Limit Enforced
+                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 small">
+                            Closing at <span th:text="${formattedEndTime}">End Time</span>
+                        </span>
+                    </div>
+                    <h5 class="fw-bold mb-0 text-dark">Ballot Voting Window Active</h5>
+                    <small class="text-muted">Cast and sign your ballot before the timer reaches zero. Ballots will be sealed upon expiration.</small>
+                </div>
+            </div>
+            <div class="text-end">
+                <small class="text-muted fw-bold d-block mb-1">TIME REMAINING</small>
+                <div id="ballotCountdown" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-4 py-2 rounded-4 fs-3 font-monospace fw-bold shadow-sm">
+                    --:--:--
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-Tenant Organization & Electorate Security Banner -->
+        <div class="alert alert-light border rounded-4 p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge rounded-pill px-3 py-2" th:classappend="${voter.voterCategoryBadgeClass}">
+                    <i th:class="${voter.voterCategoryIcon} + ' me-1'"></i>
+                    <span th:text="${voter.voterCategoryDisplayName}">Corporate Employee</span>
+                </span>
+                <div>
+                    <div class="fw-semibold text-dark small">
+                        <span>Organization Isolation Active: </span>
+                        <span class="text-primary fw-bold" th:text="${voter.organizationDisplayName}">Infosys</span>
+                        <span class="text-muted">&bull;</span>
+                        <span class="text-success" th:text="${voter.department}">Cultural & Events Committee</span>
+                    </div>
+                    <small class="text-muted" th:if="${voter.organization != null and voter.organization.equalsIgnoreCase('Infosys')}">
+                        <i class="fa-solid fa-shield-halved text-success me-1"></i>
+                        You are securely authenticated as an <strong>Infosys employee</strong>. You can only view and vote on Infosys leadership offices (e.g. Cultural Event Organizer). External elections are isolated and barred.
+                    </small>
+                    <small class="text-muted" th:unless="${voter.organization != null and voter.organization.equalsIgnoreCase('Infosys')}">
+                        <i class="fa-solid fa-shield-halved text-success me-1"></i>
+                        Showing voting fields permitted exclusively for members of <span th:text="${voter.organizationDisplayName}">Organization</span>.
+                    </small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2 small" th:if="${excludedCount > 0}">
+                    <i class="fa-solid fa-lock me-1"></i> <span th:text="${excludedCount}">0</span> External Role(s) Isolated
+                </span>
+                <span class="badge bg-light text-secondary border rounded-pill px-3 py-2 small">
+                    <i class="fa-solid fa-id-badge me-1"></i> <span th:text="${voter.voterId}">ID</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Empty State if no positions -->
+        <div th:if="${positions.isEmpty()}" class="glass-card p-5 text-center mb-4">
+            <div class="mb-3">
+                <i class="fa-solid fa-building-circle-check text-success text-opacity-50" style="font-size: 3.5rem;"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">No Active Ballot for Your Organization</h4>
+            <p class="text-muted small mb-3">There are currently no active voting positions scheduled for <strong th:text="${voter.organizationDisplayName}">Your Organization</strong>.</p>
+            <div class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">
+                <i class="fa-solid fa-shield-halved text-success me-1"></i> Multi-Tenant Isolation Active &bull; External Elections Protected
+            </div>
+        </div>
+
+        <!-- Ballot Form -->
+        <form id="ballotForm" th:action="@{/ballot/submit}" method="POST" th:unless="${positions.isEmpty()}">
+            
+            <div th:each="pos : ${positions}" class="glass-card p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h4 class="fw-bold mb-0 text-success" th:text="${pos.description}">Position Name</h4>
+                            <span th:if="${pos.isOrganizationRestricted()}" class="badge bg-primary text-white rounded-pill px-2 py-1 small">
+                                <i class="fa-solid fa-building me-1"></i> <span th:text="${pos.targetOrganization}">Infosys</span>
+                            </span>
+                        </div>
+                        <small class="text-muted" th:text="'Priority #' + ${pos.priority} + ' &bull; Maximum selection: ' + ${pos.maxVote} + (${pos.maxVote == 1} ? ' candidate' : ' candidates')">Max Vote</small>
+                    </div>
+                    <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 small" th:text="${pos.maxVote == 1 ? 'Single Choice' : 'Multiple Choice'}">Choice Type</span>
+                </div>
+
+                <!-- Empty Candidates Alert -->
+                <div th:if="${pos.candidates.isEmpty()}" class="alert alert-light border border-secondary border-opacity-25 rounded-3 text-muted small p-3">
+                    <i class="fa-solid fa-circle-info me-1 text-primary"></i> No candidates currently enrolled for this position in <span th:text="${pos.targetOrganizationDisplayName}">Organization</span>.
+                </div>
+
+                <!-- Candidates Grid -->
+                <div class="row g-3" th:unless="${pos.candidates.isEmpty()}">
+                    <div th:each="cand : ${pos.candidates}" class="col-md-6 col-lg-4">
+                        <div class="card h-100 border rounded-4 candidate-card p-3 shadow-sm bg-white" style="cursor: pointer; transition: all 0.25s ease;">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="rounded-circle overflow-hidden border border-2 border-success border-opacity-25" style="width: 64px; height: 64px; min-width: 64px;">
+                                    <img th:src="@{'/images/' + ${cand.photo}}" onerror="this.src='/static/images/Screenshot.png'" class="w-100 h-100 object-fit-cover" alt="Candidate Photo">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="fw-bold mb-0 text-dark" th:text="${cand.fullName}">Candidate Name</h5>
+                                    <div class="d-flex flex-wrap align-items-center gap-1 mt-1">
+                                        <small class="text-muted" th:text="${pos.description}">Position</small>
+                                        <span class="badge rounded-pill px-2 py-0" style="font-size: 0.68rem;" th:classappend="${cand.organizationBadgeClass}">
+                                            <i class="fa-solid fa-building me-1"></i>
+                                            <span th:text="${cand.organization}">Infosys</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div th:if="${cand.symbol != null}" class="rounded-3 overflow-hidden border p-1" style="width: 48px; height: 48px; min-width: 48px;">
+                                    <img th:src="@{'/images/' + ${cand.symbol}}" class="w-100 h-100 object-fit-contain" alt="Party Symbol">
+                                </div>
+                            </div>
+
+                            <p class="text-secondary small flex-grow-1 mb-3" th:text="${cand.platform != null and !cand.platform.isBlank() ? cand.platform : 'Dedicated to transparent and public service.'}">Platform bio</p>
+
+                            <!-- Selection Control -->
+                            <div class="border-top pt-2 d-flex align-items-center justify-content-between">
+                                <span class="small fw-semibold text-muted">Select</span>
+                                <div class="form-check">
+                                    <!-- Radio if maxVote == 1 -->
+                                    <input th:if="${pos.maxVote == 1}" class="form-check-input candidate-select fs-5" type="radio" 
+                                           th:name="'pos_' + ${pos.id}" th:value="${cand.id}"
+                                           th:data-pos-name="${pos.description}" th:data-cand-name="${cand.fullName}">
+                                    
+                                    <!-- Checkbox if maxVote > 1 -->
+                                    <input th:if="${pos.maxVote > 1}" class="form-check-input candidate-select fs-5" type="checkbox" 
+                                           th:name="'pos_' + ${pos.id}" th:value="${cand.id}"
+                                           th:data-max-vote="${pos.maxVote}" th:data-pos-id="${pos.id}"
+                                           th:data-pos-name="${pos.description}" th:data-cand-name="${cand.fullName}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Ballot Actions -->
+            <div class="glass-card p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="text-muted small">
+                    <i class="fa-solid fa-lock text-success me-1"></i> Your selections will be cryptographically hashed and sealed upon clicking submit.
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success px-4 rounded-pill" id="btnPreview" data-bs-toggle="modal" data-bs-target="#previewModal">
+                        <i class="fa-solid fa-eye me-1"></i> Preview Ballot
+                    </button>
+                    <button type="button" class="btn btn-emerald px-4 rounded-pill" id="btnSubmitBallot">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Cast Ballot
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </main>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success"><i class="fa-solid fa-clipboard-check me-2"></i> Review Your Ballot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Please verify your selected candidates before finalizing your vote.</p>
+                    <ul class="list-group rounded-3 mb-3" id="previewList">
+                        <!-- Populated via JavaScript -->
+                    </ul>
+                    <div class="alert alert-light border small text-muted">
+                        <i class="fa-solid fa-shield-alt text-success me-1"></i> Once submitted, your ballot cannot be altered or re-voted.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Change Choices</button>
+                    <button type="button" class="btn btn-emerald rounded-pill px-4" id="btnConfirmSubmit">Confirm & Sign Ballot</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+
+    <script>
+        // Checkbox max vote enforcement
+        document.querySelectorAll('input[type="checkbox"][data-max-vote]').forEach(chk => {
+            chk.addEventListener('change', function() {
+                const max = parseInt(this.getAttribute('data-max-vote'));
+                const posId = this.getAttribute('data-pos-id');
+                const checkedCount = document.querySelectorAll(`input[type="checkbox"][data-pos-id="${posId}"]:checked`).length;
+                if (checkedCount > max) {
+                    this.checked = false;
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Vote Limit Reached',
+                        text: `You can only select a maximum of ${max} candidates for this position.`,
+                        confirmButtonColor: '#10b981'
+                    });
+                }
+            });
+        });
+
+        // Click on candidate card selects radio / checkbox
+        document.querySelectorAll('.candidate-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    const input = this.querySelector('input.candidate-select');
+                    if (input.type === 'radio') {
+                        input.checked = true;
+                    } else if (input.type === 'checkbox') {
+                        input.checked = !input.checked;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+        });
+
+        // Populate Preview Modal
+        function buildPreview() {
+            const previewList = document.getElementById('previewList');
+            previewList.innerHTML = '';
+            const selected = document.querySelectorAll('.candidate-select:checked');
+
+            if (selected.length === 0) {
+                previewList.innerHTML = '<li class="list-group-item text-danger text-center">No candidates selected yet!</li>';
+                return false;
+            }
+
+            selected.forEach(item => {
+                const pos = item.getAttribute('data-pos-name');
+                const cand = item.getAttribute('data-cand-name');
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.innerHTML = `<div><strong class="text-success">${pos}</strong></div><span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">${cand}</span>`;
+                previewList.appendChild(li);
+            });
+            return true;
+        }
+
+        document.getElementById('btnPreview').addEventListener('click', buildPreview);
+
+        document.getElementById('btnSubmitBallot').addEventListener('click', () => {
+            if (buildPreview()) {
+                const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                modal.show();
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Selection',
+                    text: 'Please select at least one candidate before casting your ballot.',
+                    confirmButtonColor: '#10b981'
+                });
+            }
+        });
+
+        document.getElementById('btnConfirmSubmit').addEventListener('click', () => {
+            document.getElementById('ballotForm').submit();
+        });
+    </script>
+
+    <!-- Live Countdown Timer Engine -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const timeLimitActive = /*[[${timeLimitActive}]]*/ false;
+        let remainingSeconds = /*[[${remainingSeconds}]]*/ 0;
+        const formattedEndTime = /*[[${formattedEndTime}]]*/ '';
+
+        if (timeLimitActive && remainingSeconds >= 0) {
+            const timerEl = document.getElementById('ballotCountdown');
+            const timerBox = document.getElementById('timerIconBox');
+
+            function updateTimerDisplay() {
+                if (remainingSeconds <= 0) {
+                    if (timerEl) {
+                        timerEl.innerText = '00:00:00';
+                        timerEl.className = 'badge bg-danger text-white px-4 py-2 rounded-4 fs-3 font-monospace fw-bold shadow-sm';
+                    }
+                    if (timerBox) {
+                        timerBox.className = 'p-3 rounded-circle bg-danger bg-opacity-10 text-danger';
+                    }
+
+                    // Disable all ballot interactions
+                    document.querySelectorAll('.candidate-select').forEach(input => input.disabled = true);
+                    const btnPreview = document.getElementById('btnPreview');
+                    const btnSubmit = document.getElementById('btnSubmitBallot');
+                    const btnConfirm = document.getElementById('btnConfirmSubmit');
+                    if (btnPreview) btnPreview.disabled = true;
+                    if (btnSubmit) btnSubmit.disabled = true;
+                    if (btnConfirm) btnConfirm.disabled = true;
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Voting Deadline Expired!',
+                        text: 'The scheduled time limit for this election has concluded. Ballots are now locked.',
+                        confirmButtonText: 'Return to Login',
+                        confirmButtonColor: '#ef4444',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        window.location.href = '/login';
+                    });
+                    return;
+                }
+
+                const hrs = Math.floor(remainingSeconds / 3600);
+                const mins = Math.floor((remainingSeconds % 3600) / 60);
+                const secs = remainingSeconds % 60;
+                const formatted = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+                if (timerEl) {
+                    timerEl.innerText = formatted;
+                    if (remainingSeconds <= 60) {
+                        timerEl.className = 'badge bg-danger text-white px-4 py-2 rounded-4 fs-3 font-monospace fw-bold shadow-sm';
+                        if (timerBox) timerBox.className = 'p-3 rounded-circle bg-danger bg-opacity-10 text-danger';
+                    } else if (remainingSeconds <= 300) {
+                        timerEl.className = 'badge bg-warning text-dark px-4 py-2 rounded-4 fs-3 font-monospace fw-bold shadow-sm';
+                        if (timerBox) timerBox.className = 'p-3 rounded-circle bg-warning bg-opacity-15 text-warning';
+                    }
+                }
+
+                remainingSeconds--;
+                setTimeout(updateTimerDisplay, 1000);
+            }
+
+            updateTimerDisplay();
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

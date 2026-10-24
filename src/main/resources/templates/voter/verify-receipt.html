@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Zero-Knowledge Ballot Verifier')}"></head>
+<body class="d-flex flex-column justify-content-between">
+    <div th:replace="~{fragments/layout :: voterNavbar}"></div>
+
+    <main class="container my-auto py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-xl-6">
+                <div class="glass-card p-4 p-md-5">
+                    
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-3">
+                            <i class="fa-solid fa-file-shield fa-2x"></i>
+                        </div>
+                        <h3 class="fw-bold text-success mb-1">Zero-Knowledge Ballot Verifier</h3>
+                        <p class="text-muted small">Verify that your encrypted ballot is permanently sealed in the ledger without compromising vote secrecy.</p>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form th:action="@{/verify-receipt}" method="GET" class="mb-4">
+                        <div class="input-group">
+                            <input type="text" name="token" th:value="${token}" class="form-control" placeholder="Enter your Tracking Token UUID..." required>
+                            <button class="btn btn-emerald" type="submit"><i class="fa-solid fa-search me-1"></i> Verify</button>
+                        </div>
+                    </form>
+
+                    <!-- Verification Result -->
+                    <div th:if="${token != null}">
+                        <div th:if="${found}" class="card border-success border-opacity-50 rounded-4 p-4 bg-light shadow-sm">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-success text-white rounded-circle p-3">
+                                    <i class="fa-solid fa-check fs-4"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold text-success mb-0">Ballot Authenticated</h5>
+                                    <small class="text-muted">Recorded & Verified on Cryptographic Ledger</small>
+                                </div>
+                            </div>
+                            <ul class="list-group list-group-flush rounded-3 border">
+                                <li class="list-group-item d-flex justify-content-between small">
+                                    <span class="text-muted">Voter ID Hash:</span>
+                                    <strong class="text-dark" th:text="${maskedVoterId}">VOTER_***</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between small" th:if="${voterOrganization != null}">
+                                    <span class="text-muted">Organization / Entity:</span>
+                                    <span class="badge bg-primary rounded-pill px-3 py-1" th:text="${voterOrganization}">Infosys</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between small">
+                                    <span class="text-muted">Timestamp:</span>
+                                    <strong class="text-dark" th:text="${votedAt}">Timestamp</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between small">
+                                    <span class="text-muted">Consensus Proof:</span>
+                                    <span class="badge bg-success">Valid & Tamper-Free</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div th:unless="${found}" class="alert alert-warning border-warning rounded-4 p-4 text-center">
+                            <i class="fa-solid fa-circle-question fs-2 text-warning mb-2 d-block"></i>
+                            <h5 class="fw-bold text-dark">Ballot Token Not Found</h5>
+                            <p class="text-muted small mb-0" th:text="${message}">No record found.</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-link text-success text-decoration-none small">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Return to Main Portal
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

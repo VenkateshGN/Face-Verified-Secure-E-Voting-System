@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: face-verified-voting-system
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://gateway01.ap-southeast-1.prod.aws.tidbcloud.com:4000/votesystem?sslMode=VERIFY_IDENTITY&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Kolkata
+      - key: SPRING_DATASOURCE_USERNAME
+        value: 2ST8Efv3pNX6Hf7.root
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: EVlX7njZh11h61B9

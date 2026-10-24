@@ -1,112 +1,136 @@
-# 🗳️ Face-Verified Secure E-Voting System with OTP Authentication
+# 🗳️ Face-Verified Secure E-Voting System with Micro-Blockchain & Biometric Authentication
 
-A secure, web-based electronic voting management system designed to provide reliable and tamper-resistant elections using multi-factor authentication.
-
-The system combines:
-
-🔐 Voter credential authentication
-👤 Face verification using DeepFace
-📱 OTP-based verification
-🛡️ Secure vote management
-📊 Admin monitoring and vote tally
-
-The application is built with a modern Light Green & Mint responsive UI theme and focuses on improving voter identity verification and election security.
+A modern, enterprise-grade electronic voting management system converted and rebuilt in **Java 21 & Spring Boot 3.3.x**, featuring multi-factor authentication, cryptographic ballot sealing, a **Micro-Blockchain Immutable Ledger**, and real-time **Tamper Detection Auditing**.
 
 ---
 
-## Features
+## 🌟 Architecture & Key Upgrades
 
-- User Registration and Login
-- Face Verification Authentication
-- Secure Vote Casting
-- One Person One Vote Mechanism
-- Candidate Management
-- Admin Dashboard
-- Real-Time Vote Tally
-- Election Result Management
+### Multi-Stage Voter Verification Pipeline
+1. **Stage 1 - Voter Credentials**: Alphanumeric Voter ID and BCrypt password authentication.
+2. **Stage 2 - Biometric Face AI & Liveness Anti-Spoofing**: Live webcam capture with random liveness challenge prompts and multi-tiered face matching (Python DeepFace / OpenCV with fallback Java perceptual similarity matcher & Emergency Bypass Key).
+3. **Stage 3 - Two-Factor Authentication (OTP)**: Cryptographically generated 6-digit OTP with a live 5-minute countdown clock, 30-second resend rate-limiting, and simulated/SMTP email dispatch.
+4. **Stage 4 - Ballot Submission**: Position-based candidate selection, max vote constraint enforcement, review modal, and atomic ballot submission.
 
-## 🎨 Interface & Screenshots
-
-### Voter & Admin Logins
-| Voter Login Screen | Admin Login Screen |
-|:---:|:---:|
-| ![Voter Login](Screen%20Shots/voter_login_light_green.png) | ![Admin Login](Screen%20Shots/admin_login.png) |
-
-### Admin Dashboard & Management
-| System Dashboard | Candidates List | Voters List | Positions Configuration |
-|:---:|:---:|:---:|:---:|
-| ![Dashboard](Screen%20Shots/dashboard_light_green.png) | ![Candidates List](Screen%20Shots/candidate_list_light_green.png) | ![Voters List](Screen%20Shots/voters_list_light_green.png) | ![Positions](Screen%20Shots/positions.png) |
-
-### Ballot Submission & Vote Tracking
-| Voter Ballot | Ballot Verification Preview | Already Voted Screen | Vote Records |
-|:---:|:---:|:---:|:---:|
-| ![Voter Ballot](Screen%20Shots/voter%20ballot.png) | ![Preview Vote](Screen%20Shots/preview%20vote.png) | ![Already Voted](Screen%20Shots/already_voted.png)|
+### Cryptographic Security & Integrity
+* **AES-256 Ballot Encryption**: Candidate IDs are encrypted with AES-256 before storage.
+* **RSA-2048 Digital Signatures**: Every ballot is signed using the election authority's RSA private key and verified with the public key.
+* **SHA-256 Vote Hash**: Chained hash combining voter ID, candidate ID, position ID, encrypted payload, and digital signature.
+* **Micro-Blockchain Ledger**: Each vote creates an immutable, cryptographically chained block linked by previous hash, Merkle root, and nonce.
+* **Zero-Knowledge Voter Receipt & QR Code**: Voters receive a unique tracking UUID and ZXing QR Code to verify ballot inclusion in the ledger without exposing their candidate choice.
+* **Real-Time Tamper Detection Engine**: Automatically flags any database modification where stored data differs from decrypted AES payloads or hash signatures.
 
 ---
 
+## 🚀 Unique Features Added
+
+| Feature | Description |
+|---|---|
+| **Universal Multi-Organization Engine** | Adapts seamlessly to **Schools & Colleges**, **Corporate Enterprises**, **NGOs & Communities**, and **Civic Elections** with dynamic branding, domain icons, and custom ID/badge labels. |
+| **1-Click Election Presets** | Instant pre-configuration of election titles, subtitles, ID formats, symbol labels, and automatic creation of standard leadership offices (e.g. Head Boy/Girl, Board of Directors, President/Treasurer, MLA/MP). |
+| **Micro-Blockchain Ledger** | Verifiable immutable chain of blocks for all cast ballots with Genesis block initialization and chain integrity validation. |
+| **Zero-Knowledge Verifier** | Allows voters to verify their ballot on the blockchain ledger (`/verify-receipt`) without compromising vote secrecy. |
+| **Interactive Liveness Challenge** | Anti-spoofing challenge generator (e.g. blinking, head movement) to prevent photo presentation attacks. |
+| **Tamper Simulation Demo** | Built-in test feature on `/admin/votes` allowing administrators to modify a candidate in the DB to demonstrate real-time cryptographic detection. |
+| **Live Turnout & Chart.js Analytics** | Real-time bar and doughnut charts with voter turnout percentage and live AJAX result polling. |
+| **Election Lifecycle Control** | State machine allowing administrators to switch election states between `ACTIVE`, `PAUSED`, and `CONCLUDED` (sealed). |
+| **Certified Election Certificate** | Printable official certified election results report (`/admin/print`) with organization profile, winner declarations, and digital seal. |
 
 ---
 
-## 🚀 Key Features
+## 🏢 Multi-Organization & Multi-Context Leader Selection
 
-*   **Multi-Stage Voter Verification Pipeline**:
-    1.  **Voter Credentials Check**: Login with a secure alphanumeric Voter ID and password.
-    2.  **Face Capture Verification**: Live webcam feed captures the voter's face and matches it against their registered voter photo using a Python-based DeepFace verification script.
-    3.  **One-Time Password (OTP)**: Generates and verifies a secure numeric code.
-*   **Security Protections (OWASP Top 10 Mitigation)**:
-    *   **SQL Injection Prevention**: All queries rewritten to use parameterized, prepared statements (`prepare()` + `bind_param()`).
-    *   **CSRF Token Protection**: Secure session-based token injection in every form, validated upon POST submission.
-    *   **Open Redirect Mitigation**: Form redirection target validation using relative path enforcement.
-    *   **Vote Reset Safety**: Converted unsafe GET-triggers into secure POST actions protected with CSRF checks.
-*   **Auditability**:
-    *   **RSA Vote Cryptographic Auditing**: Ensures votes can be verified for tamper-proofing and voter integrity.
+The platform is designed to conduct leader elections for any institution, organization, or assembly:
+
+### 1. 🎓 Schools, Colleges & Universities
+* **Context**: Student Union, Prefect Council, Departmental Associations.
+* **Standard Offices**: Student Council President / Head Boy, Vice President / Head Girl, Sports Captain, Cultural & Arts Secretary, Class / House Representatives.
+* **Electorate ID**: Student Roll Number / PRN / Campus Card ID.
+* **Candidate Badge**: House Crest / Club Insignia / Student Badge.
+
+### 2. 🏢 Corporate Companies & Enterprises
+* **Context**: Board of Directors, Employee Advisory Council, Steering Committees.
+* **Standard Offices**: Board of Directors (Shareholder Reps), Employee Advisory Committee, Innovation & Technology Lead, Workplace Safety & Welfare Officer.
+* **Electorate ID**: Corporate Employee ID / SSO Workday ID.
+* **Candidate Badge**: Division Emblem / Business Unit Logo.
+
+### 3. 👥 Communities, Clubs, Societies & NGOs
+* **Context**: Residential Welfare Associations (RWA), Non-Profit Boards, Professional Societies.
+* **Standard Offices**: President / Chairperson, General Secretary, Treasurer & Financial Auditor, Executive Committee Members.
+* **Electorate ID**: Membership Card Number / Registration Number.
+* **Candidate Badge**: Society Seal / Chapter Crest / Logo.
+
+### 4. 🏛️ Civic & Public Democratic Bodies
+* **Context**: Legislative, Parliamentary, and Municipal Assemblies.
+* **Standard Offices**: Member of Legislative Assembly (MLA), Member of Parliament (MP), Mayor / Ward Councillor.
+* **Electorate ID**: Electoral Photo Identity Card (EPIC / Voter ID).
+* **Candidate Badge**: Official Party Symbol / Election Allotment.
+
+> **1-Click Switching**: Administrators can switch between any of these presets directly from the Admin Dashboard or customize all parameters on `/admin/profile`.
+
+---
+
+## 🐛 Bugs Fixed from Legacy Codebase
+
+1. **Cleartext OTP Leakage**: The legacy code printed the OTP in plain text on the voter's screen (`Your OTP: <?php echo $_SESSION['otp']; ?>`). Replaced with secure session storage, email dispatch, 5-minute expiry countdown timer, and simulated notifications in test mode.
+2. **Weak Static IV in AES**: Fixed weak static IV in CBC mode by using standard cryptographic initialization vectors and automated padding.
+3. **Fragile RSA Key Loading**: Removed brittle relative paths (`keys/public.pem`, `../keys/public.pem`). Keys are loaded cleanly via Spring configuration with automated keypair generation fallback.
+4. **Concurrent Double-Voting Race Condition**: Made ballot submission `@Transactional(isolation = Isolation.SERIALIZABLE)` with database unique constraints on `(voters_id, position_id, candidate_id)`.
+5. **Partial Ballot Insertion**: Multi-position ballot submissions are atomic; if any candidate selection is invalid, all inserts are rolled back.
+6. **Missing Database Tables**: Created entities and tables for `audit_logs`, `tamper_logs`, `blockchain_ledger`, and `election_settings` which were missing from the SQL schema.
+7. **Biometric Script Hang**: Added timeout protection, Java perceptual similarity fallback, and emergency passkey bypass so voters are never locked out if webcam or Python dependencies are absent.
 
 ---
 
 ## 🛠️ Technology Stack
 
-*   **Backend**: PHP (v7.4+ or v8.x), Python 3 (for Face Verification models)
-*   **Database**: MySQL / MariaDB
-*   **Frontend**: HTML5, CSS3 (Custom Light Green Glassmorphism theme), JavaScript, jQuery, Bootstrap 3, SweetAlert2 Popups
-*   **Biometrics Engine**: Python `deepface`, `opencv-python`, `numpy`
+* **Backend**: Java 21, Spring Boot 3.3.4 (Spring MVC, Spring Data JPA, Spring Security Crypto)
+* **Templates**: Thymeleaf HTML5 with responsive Light Green Glassmorphism theme
+* **Database**: Persistent H2 (MySQL compatibility mode for zero-setup execution) & Native MySQL 8.x Profile
+* **Biometrics**: HTML5 MediaDevices Webcam API, Python `deepface` / `opencv-python`, Java Perceptual Image Matcher
+* **Cryptography**: AES-256, RSA-2048, SHA-256, BouncyCastle, ZXing QR Code Engine
+* **Frontend**: Bootstrap 5, FontAwesome 6, Chart.js, SweetAlert2
 
 ---
 
-## 💻 Setup & Installation Instructions
+## 💻 How to Run the Application
 
-### 1. Prerequisite Environments
-1.  Download and install **XAMPP** (or any LAMP/WAMP server supporting PHP 7.4+ and MySQL).
-2.  Install **Python 3.8+** on your system and ensure it is added to your environment `PATH`.
+### 1. Prerequisites
+* **Java 21** or later installed and on your `PATH`.
+* (Optional) **Python 3.8+** with `deepface` and `opencv-python` for AI face verification (fallback matcher is built-in).
 
-### 2. Clone and Place the Project
-Clone the repository and place the project folder inside your web server's public directory (e.g., `C:\xampp\htdocs\Online-Voting-System\`).
+### 2. Run with Embedded Zero-Setup Database (Recommended)
+You do not need to install or configure MySQL. Simply execute the included Maven wrapper:
 
-### 3. Database Import
-1.  Start Apache and MySQL services in the XAMPP Control Panel.
-2.  Open your browser and navigate to `http://localhost/phpmyadmin/`.
-3.  Create a new database named `votesystem`.
-4.  Select the `votesystem` database, go to the **Import** tab, choose the file [votesystem.sql](file:///c:/xampp/htdocs/Online-Voting-System/Online-Voting-System/voting-management-system/votesystem/votesystem/db/votesystem.sql) located under the `db/` folder, and click **Go**.
-
-### 4. Setup Database Credentials
-If your database configuration differs, update the connection parameters inside:
-*   [includes/conn.php](file:///c:/xampp/htdocs/Online-Voting-System/Online-Voting-System/voting-management-system/votesystem/votesystem/includes/conn.php)
-*   [admin/includes/conn.php](file:///c:/xampp/htdocs/Online-Voting-System/Online-Voting-System/voting-management-system/votesystem/votesystem/admin/includes/conn.php)
-
-*Note: In local Windows/XAMPP environments, using `127.0.0.1` as the host (with an empty password) is recommended to prevent IPv6 DNS loopback connection failures.*
-
-### 5. Install Python Dependencies
-Open your command terminal and install the required dependencies for face comparison:
 ```bash
-pip install deepface opencv-python numpy tf-keras
+# Windows
+.\mvnw.cmd spring-boot:run
+
+# Linux / macOS
+./mvnw spring-boot:run
 ```
 
+Or run the pre-built standalone executable JAR:
+```bash
+java -jar target/face-verified-voting-system-1.0.0.jar
+```
+
+The application will start immediately on **`http://localhost:8080`**.
+
+### 3. Cloud Database (TiDB Cloud Serverless) & Render Deployment
+The application is pre-configured for zero-friction cloud deployment using **TiDB Cloud Serverless MySQL** and **Render**:
+1. Connects seamlessly to TiDB Cloud over secure TLS (`VERIFY_IDENTITY`).
+2. Multi-stage [`Dockerfile`](Dockerfile) and [`render.yaml`](render.yaml) included for automatic continuous deployment.
+3. Automatically adapts to Render's dynamic `$PORT`.
+
 ---
 
-## 🔑 Login Credentials
+## 🔑 Default Login Credentials
 
-*   **Voter Login**:
-    *   Voter ID: `HrEn9AbXxtpo6jf`
-    *   Password: `password`
-*   **Admin Login**:
-    *   Username: `Venkatesh`
-    *   Password: `password`
+### Platform Super Administrator (`http://localhost:8080/admin/login`)
+* **Username**: `Venkatesh`
+* **Password**: `password`
+* **Role**: `SUPER_ADMIN` (Manages all organization elections, organizers, and settings)
+
+### Independent Public Cryptographic Audit
+* Navigate to **`http://localhost:8080/verify-votes`** to view real-time cryptographic audit results and micro-blockchain ledger verification.

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Ballot Records & Cryptographic Audit - Admin')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        <div class="glass-card p-4">
+            
+            <div class="d-flex flex-wrap align-items-center justify-content-between border-bottom pb-3 mb-4 gap-3">
+                <div>
+                    <h3 class="fw-bold text-success mb-1">Ballot Records &amp; Cryptographic Audit</h3>
+                    <p class="text-muted small mb-0">AES-256 Decryption, RSA-2048 Digital Signatures, and SHA-256 Hash Verification.</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-warning rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#tamperModal">
+                        <i class="fa-solid fa-bug me-1"></i> Simulate Tampering (Demo)
+                    </button>
+                    <!-- Tenant-Scoped Reset Votes -->
+                    <form th:if="${isViewingSpecificOrg}" th:action="@{/admin/votes/reset}" method="POST"
+                          onsubmit="return confirm('⚠️ WARNING: This will permanently delete all cast votes for ' + this.organization.value + '! Continue?');">
+                        <input type="hidden" name="organization" th:value="${activeOrg}" />
+                        <button type="submit" class="btn btn-outline-danger rounded-pill px-3">
+                            <i class="fa-solid fa-trash-can me-1"></i> Reset <span th:text="${activeOrg}">Infosys</span> Votes
+                        </button>
+                    </form>
+                    <form th:unless="${isViewingSpecificOrg}" th:action="@{/admin/votes/reset}" method="POST"
+                          onsubmit="return confirm('CRITICAL WARNING: This will permanently delete ALL cast votes across ALL organizations! Continue?');">
+                        <input type="hidden" name="organization" value="ALL" />
+                        <button type="submit" class="btn btn-outline-danger rounded-pill px-3">
+                            <i class="fa-solid fa-trash-can me-1"></i> Reset All Votes
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Organization Filter Pills for Super Admin -->
+            <div th:if="${isSuperAdmin}" class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 mb-4 rounded-4 bg-light border">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-muted fw-bold small"><i class="fa-solid fa-filter me-1 text-primary"></i> Scope Organization:</span>
+                    <a th:href="@{/admin/votes(org='ALL')}" class="btn btn-sm rounded-pill px-3"
+                       th:classappend="${activeOrg == 'ALL' ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary'}">
+                        <i class="fa-solid fa-globe me-1"></i> All Organizations
+                    </a>
+                    <a th:each="orgName : ${availableOrganizations}"
+                       th:href="@{/admin/votes(org=${orgName})}"
+                       class="btn btn-sm rounded-pill px-3"
+                       th:classappend="${activeOrg == orgName ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary'}">
+                        <i class="fa-solid fa-building me-1"></i> <span th:text="${orgName}">Infosys</span>
+                    </a>
+                </div>
+                <div th:if="${isViewingSpecificOrg}">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                        Currently Scoped: <strong th:text="${activeOrg}">Infosys</strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Scoped Banner for Delegated Event Organizers -->
+            <div th:unless="${isSuperAdmin}" class="alert alert-info rounded-4 py-2 px-3 mb-4 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-building text-primary fs-5"></i>
+                <div>
+                    Displaying ballot records exclusively for <strong><span th:text="${adminOrg}">Infosys</span></strong>. Ballots belonging to other organizations are strictly hidden.
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Summary Alert -->
+            <div th:if="${auditReport.tamperedVotes > 0}" class="alert alert-danger rounded-4 p-3 mb-4">
+                <h5 class="fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> CRITICAL: Cryptographic Tampering Detected!</h5>
+                <span>We detected <strong><span th:text="${auditReport.tamperedVotes}">1</span></strong> tampered vote(s) out of <strong><span th:text="${auditReport.totalVotes}">1</span></strong> total votes<span th:if="${isViewingSpecificOrg}"> in <strong th:text="${activeOrg}">Infosys</strong></span>. Tampered records have been flagged and excluded from official tallies.</span>
+            </div>
+            <div th:unless="${auditReport.tamperedVotes > 0}" class="alert alert-success rounded-4 p-3 mb-4">
+                <h5 class="fw-bold"><i class="fa-solid fa-circle-check me-2"></i> All Votes Verified &amp; Cryptographically Intact!</h5>
+                <span>All <strong><span th:text="${auditReport.totalVotes}">0</span></strong> cast votes<span th:if="${isViewingSpecificOrg}"> in <strong th:text="${activeOrg}">Infosys</strong></span> match their encrypted AES payloads, SHA-256 hashes, and RSA signatures. Zero discrepancies.</span>
+            </div>
+
+            <!-- Table of Votes -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Vote ID</th>
+                            <th>Voter</th>
+                            <th>Organization</th>
+                            <th>Position</th>
+                            <th>DB Candidate</th>
+                            <th>Decrypted Candidate</th>
+                            <th>AES Payload &amp; Signature</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${auditReport.items}" th:classappend="${!item.valid ? 'table-danger' : ''}">
+                            <td><strong class="text-dark" th:text="'#' + ${item.vote.id}">#1</strong></td>
+                            <td>
+                                <strong th:text="${item.vote.voter.fullName}">Voter</strong>
+                                <br><small class="text-muted" th:text="${item.vote.voter.voterId}">VOTER_ID</small>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${item.vote.organization == 'Infosys' ? 'bg-primary text-white' : 'bg-info text-dark'}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${item.vote.organizationDisplayName}">Infosys</span>
+                                </span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border" th:text="${item.vote.position.description}">MLA</span></td>
+                            <td><strong class="text-dark" th:text="${item.vote.candidate.fullName}">Candidate</strong></td>
+                            <td>
+                                <span th:text="${item.originalCandidateName}">Decrypted Name</span>
+                            </td>
+                            <td>
+                                <div class="font-monospace text-muted text-truncate" style="max-width: 180px;" th:title="${item.vote.encryptedVote}" th:text="'AES: ' + ${item.vote.encryptedVote}">AES</div>
+                                <div class="font-monospace text-muted text-truncate" style="max-width: 180px;" th:title="${item.vote.digitalSignature}" th:text="'RSA: ' + ${item.vote.digitalSignature}">RSA</div>
+                            </td>
+                            <td>
+                                <span th:if="${item.valid}" class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check-circle me-1"></i> VALID</span>
+                                <span th:unless="${item.valid}" class="badge bg-danger rounded-pill px-3 py-2" th:title="${item.reasons}"><i class="fa-solid fa-ban me-1"></i> TAMPERED</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(auditReport.items)}">
+                            <td colspan="8" class="text-center text-muted py-4">No ballots cast in this scope yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Simulate Tamper Modal -->
+    <div class="modal fade" id="tamperModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-warning"><i class="fa-solid fa-bug me-2"></i> Simulate Database Tampering</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/votes/simulate-tamper}" method="POST">
+                    <div class="modal-body">
+                        <p class="text-muted small">This developer test directly modifies the <code>candidate_id</code> column in the database without altering the AES-256 payload or RSA digital signature. This proves that any unauthorized database alteration is immediately detected and flagged!</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Select Vote to Alter</label>
+                            <select name="voteId" class="form-select" required>
+                                <option th:each="item : ${auditReport.items}" th:value="${item.vote.id}" th:text="'Vote #' + ${item.vote.id} + ' - ' + ${item.vote.voter.fullName} + ' (' + ${item.vote.position.description} + ')'">Vote</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Alter Candidate To</label>
+                            <select name="newCandidateId" class="form-select" required>
+                                <option th:each="c : ${allCandidates}" th:value="${c.id}" th:text="${c.fullName} + ' (' + ${c.position.description} + ')'">Candidate</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning rounded-pill px-4">Execute Tamper Simulation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

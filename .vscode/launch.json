@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-VoteSystemApplication<face-verified-voting-system>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.votesystem.VoteSystemApplication",
+            "projectName": "face-verified-voting-system",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot (MySQL Profile)",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.votesystem.VoteSystemApplication",
+            "projectName": "face-verified-voting-system",
+            "args": "--spring.profiles.active=mysql"
+        }
+    ]
+}

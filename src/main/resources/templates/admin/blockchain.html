@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Blockchain Explorer - Immutable Ballot Ledger')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        
+        <!-- Header Banner -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <span class="badge bg-primary bg-opacity-15 text-primary rounded-pill px-3 py-1 mb-2">
+                        <i class="fa-solid fa-cubes me-1"></i> Micro-Blockchain Ledger
+                    </span>
+                    <h2 class="fw-bold text-success mb-1">Blockchain Ledger Explorer</h2>
+                    <p class="text-muted small mb-0">Every ballot cast generates an immutable, cryptographically chained block linked by SHA-256 hashes.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge" th:classappend="${validation.valid ? 'bg-success' : 'bg-danger'}" style="font-size: 0.95rem; padding: 8px 14px;">
+                        <i class="fa-solid fa-shield-halved me-1"></i> <span th:text="${validation.valid ? 'CHAIN VERIFIED' : 'TAMPER DETECTED'}">VERIFIED</span>
+                    </span>
+                    <button class="btn btn-outline-success btn-sm rounded-pill" onclick="location.reload()">
+                        <i class="fa-solid fa-arrows-rotate me-1"></i> Re-Verify Chain
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Organization Filter Pills for Super Admin -->
+        <div th:if="${isSuperAdmin}" class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 mb-4 rounded-4 bg-light border">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="text-muted fw-bold small"><i class="fa-solid fa-filter me-1 text-primary"></i> Scope Organization:</span>
+                <a th:href="@{/admin/blockchain(org='ALL')}" class="btn btn-sm rounded-pill px-3"
+                   th:classappend="${activeOrg == 'ALL' ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary'}">
+                    <i class="fa-solid fa-globe me-1"></i> All Blocks
+                </a>
+                <a th:each="orgName : ${availableOrganizations}"
+                   th:href="@{/admin/blockchain(org=${orgName})}"
+                   class="btn btn-sm rounded-pill px-3"
+                   th:classappend="${activeOrg == orgName ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary'}">
+                    <i class="fa-solid fa-building me-1"></i> <span th:text="${orgName}">Infosys</span>
+                </a>
+            </div>
+            <div th:if="${isViewingSpecificOrg}">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                    Ledger View: <strong th:text="${activeOrg}">Infosys</strong>
+                </span>
+            </div>
+        </div>
+
+        <!-- Scoped Banner for Event Organizers -->
+        <div th:unless="${isSuperAdmin}" class="alert alert-info rounded-4 py-2 px-3 mb-4 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-building text-primary fs-5"></i>
+            <div>
+                Viewing blockchain ledger blocks for <strong><span th:text="${adminOrg}">Infosys</span></strong> and the Genesis Block. Global cryptographic chain continuity is verified.
+            </div>
+        </div>
+
+        <!-- Discrepancies Alert -->
+        <div th:if="${!validation.valid}" class="alert alert-danger rounded-4 p-3 mb-4">
+            <h5 class="fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Blockchain Tampering Identified:</h5>
+            <ul class="mb-0 small">
+                <li th:each="issue : ${validation.issues}" th:text="${issue}">Issue description</li>
+            </ul>
+        </div>
+
+        <!-- Blockchain Block Cards Stream -->
+        <div class="d-flex flex-column gap-3">
+            <div th:each="b : ${blocks}" class="glass-card p-4 border" th:classappend="${b.blockIndex == 0 ? 'border-primary' : 'border-success'}">
+                <div class="d-flex flex-wrap align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-dark rounded-pill px-3 py-2 fs-6" th:text="'Block #' + ${b.blockIndex}">Block #0</span>
+                        <span th:if="${b.blockIndex == 0}" class="badge bg-primary">GENESIS BLOCK</span>
+                        <span th:unless="${b.blockIndex == 0}" class="badge rounded-pill px-3 py-1"
+                              th:classappend="${b.organization == 'Infosys' ? 'bg-primary text-white' : 'bg-info text-dark'}">
+                            <i class="fa-solid fa-building me-1"></i>
+                            <span th:text="${b.organization}">Infosys</span>
+                        </span>
+                        <span class="text-muted small" th:text="${b.timestamp}">Timestamp</span>
+                    </div>
+                    <span class="badge bg-light text-muted border">
+                        <i class="fa-solid fa-dice me-1"></i> Nonce: <span th:text="${b.nonce}">0</span>
+                    </span>
+                </div>
+
+                <div class="row g-2 small font-monospace">
+                    <div class="col-md-6">
+                        <span class="text-muted d-block font-sans">Block Hash:</span>
+                        <code class="text-success text-break fw-bold" th:text="${b.blockHash}">HASH</code>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted d-block font-sans">Previous Block Hash:</span>
+                        <code class="text-secondary text-break" th:text="${b.previousHash}">PREV_HASH</code>
+                    </div>
+                    <div class="col-md-6 mt-2">
+                        <span class="text-muted d-block font-sans">Merkle Root:</span>
+                        <code class="text-dark text-break" th:text="${b.merkleRoot}">MERKLE</code>
+                    </div>
+                    <div class="col-md-6 mt-2">
+                        <span class="text-muted d-block font-sans">Vote Hash:</span>
+                        <code class="text-info text-break" th:text="${b.voteHash}">VOTE_HASH</code>
+                    </div>
+                </div>
+
+                <div class="mt-3 p-2 bg-light rounded-3 small">
+                    <strong class="text-dark">Transaction Payload:</strong>
+                    <span class="text-muted ms-1" th:text="${b.dataPayload}">Ballot summary</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Manage Organizers - Admin Control Center')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        <div class="glass-card p-4">
+            
+            <div class="d-flex flex-wrap align-items-center justify-content-between border-bottom pb-3 mb-4 gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-primary text-white rounded-pill px-3 py-1">
+                            <i class="fa-solid fa-users-gear me-1"></i> Multi-Tenant Governance
+                        </span>
+                        <h3 class="fw-bold text-success mb-0">Organization &amp; Event Organizers</h3>
+                    </div>
+                    <p class="text-muted small mb-0">
+                        Manage delegated event administrators. Each organizer administers their own company or institution's elections without cross-tenant interference.
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-emerald rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#organizerModal" onclick="prepareAddOrganizer()">
+                        <i class="fa-solid fa-user-plus me-1"></i> Add New Organizer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Organizers Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Username</th>
+                            <th>Organizer Full Name</th>
+                            <th>Assigned Organization</th>
+                            <th>Designation / Title</th>
+                            <th>Administrative Role</th>
+                            <th>Registered On</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="org : ${organizers}">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="p-2 rounded-circle bg-light border text-secondary">
+                                        <i class="fa-solid fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-dark" th:text="${org.username}">username</strong>
+                                        <span th:if="${org.id == currentAdmin.id}" class="badge bg-secondary-subtle text-secondary ms-1">You</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-dark" th:text="${org.fullName}">First Last</span>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${org.roleBadgeClass}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${org.organization}">Infosys</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-muted" th:text="${org.organizerTitle}">Cultural Event Organizer</span>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${org.superAdmin ? 'bg-danger text-white' : 'bg-primary text-white'}">
+                                    <i th:class="${org.superAdmin ? 'fa-solid fa-shield-halved' : 'fa-solid fa-building-user'} + ' me-1'"></i>
+                                    <span th:text="${org.role}">ORG_ADMIN</span>
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted" th:text="${org.createdOn != null ? org.createdOn : 'N/A'}">2026-10-21</small>
+                            </td>
+                            <td class="text-end">
+                                <a th:if="${!org.superAdmin and org.organization != 'ALL'}"
+                                   th:href="@{/admin/dashboard(viewOrg=${org.organization})}"
+                                   class="btn btn-outline-success btn-sm rounded-pill px-3 me-1"
+                                   title="View this organization's live dashboard">
+                                    <i class="fa-solid fa-chart-pie me-1"></i> Dashboard
+                                </a>
+
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-1"
+                                        th:data-id="${org.id}"
+                                        th:data-username="${org.username}"
+                                        th:data-firstname="${org.firstname}"
+                                        th:data-lastname="${org.lastname}"
+                                        th:data-org="${org.organization}"
+                                        th:data-title="${org.organizerTitle}"
+                                        th:data-role="${org.role}"
+                                        onclick="prepareEditOrganizer(this.getAttribute('data-id'), this.getAttribute('data-username'), this.getAttribute('data-firstname'), this.getAttribute('data-lastname'), this.getAttribute('data-org'), this.getAttribute('data-title'), this.getAttribute('data-role'))">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </button>
+
+                                <form th:if="${!org.superAdmin and org.organization != 'ALL'}"
+                                      th:action="@{/admin/organization/delete-election}"
+                                      method="POST" class="d-inline me-1"
+                                      onsubmit="return confirm('⚠️ DANGER: Are you sure you want to completely remove the election for ' + this.organizationName.value + '? All positions, candidates, and cast votes will be permanently purged!');">
+                                    <input type="hidden" name="organizationName" th:value="${org.organization}" />
+                                    <button type="submit" class="btn btn-outline-warning btn-sm rounded-pill px-3" title="Remove / Purge Organization Election">
+                                        <i class="fa-solid fa-trash-can me-1"></i> Remove Election
+                                    </button>
+                                </form>
+
+                                <form th:if="${org.id != currentAdmin.id}" th:action="@{'/admin/organizers/delete/' + ${org.id}}" method="POST" class="d-inline" onsubmit="return confirm('Delete this organizer account? Their scoped positions and voters will remain in the database.');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" title="Delete Organizer Account">
+                                        <i class="fa-solid fa-user-xmark"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(organizers)}">
+                            <td colspan="7" class="text-center text-muted py-4">No organizers found. Click "Add New Organizer" above.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Add/Edit Organizer Modal -->
+    <div class="modal fade" id="organizerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success" id="modalTitle">
+                        <i class="fa-solid fa-user-plus me-2"></i> Add Organization Administrator
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/organizers/save}" method="POST" id="organizerSaveForm">
+                    <input type="hidden" name="id" id="orgId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Organization / Company Name <span class="text-danger">*</span></label>
+                            <input type="text" name="organization" id="orgName" class="form-control" placeholder="e.g. Infosys, Wipro, TCS, Oxford College" required>
+                            <div class="form-text small">Positions, candidates, and voters under this organization will be scoped to this organizer.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Organizer Title / Designation</label>
+                            <input type="text" name="organizerTitle" id="orgTitle" class="form-control" placeholder="e.g. Cultural Event Lead &amp; HR Representative" value="Cultural Event Organizer" required>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">First Name <span class="text-danger">*</span></label>
+                                <input type="text" name="firstname" id="orgFirstname" class="form-control" placeholder="First name" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" name="lastname" id="orgLastname" class="form-control" placeholder="Last name" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Login Username <span class="text-danger">*</span></label>
+                            <input type="text" name="username" id="orgUsername" class="form-control" placeholder="e.g. infosys_admin" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" id="passwordLabel">Login Password <span class="text-danger">*</span></label>
+                            <input type="password" name="password" id="orgPassword" class="form-control" placeholder="Enter password">
+                            <div class="form-text small" id="passwordHint">Required for new accounts. Leave blank when editing to keep current password.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Administrative Role</label>
+                            <select name="role" id="orgRole" class="form-select" required>
+                                <option value="ORG_ADMIN" selected>🏢 Organization Event Admin (Scoped to specified organization)</option>
+                                <option value="SUPER_ADMIN">👑 Platform Super Administrator (Global cross-tenant access)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-emerald rounded-pill px-4" id="saveBtn">Save Organizer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+
+    <script>
+        function prepareAddOrganizer() {
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-plus me-2"></i> Add Organization Administrator';
+            document.getElementById('orgId').value = '';
+            document.getElementById('orgName').value = '';
+            document.getElementById('orgTitle').value = 'Cultural Event Organizer';
+            document.getElementById('orgFirstname').value = '';
+            document.getElementById('orgLastname').value = '';
+            const userField = document.getElementById('orgUsername');
+            userField.value = '';
+            userField.removeAttribute('readonly');
+            const passField = document.getElementById('orgPassword');
+            passField.value = '';
+            passField.setAttribute('required', 'required');
+            document.getElementById('passwordLabel').innerHTML = 'Login Password <span class="text-danger">*</span>';
+            document.getElementById('passwordHint').innerText = 'Set the initial login password for this organizer.';
+            document.getElementById('orgRole').value = 'ORG_ADMIN';
+            document.getElementById('saveBtn').innerText = 'Create Organizer';
+        }
+
+        function prepareEditOrganizer(id, username, firstname, lastname, org, title, role) {
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-user-pen me-2"></i> Edit Organizer Details';
+            document.getElementById('orgId').value = id;
+            document.getElementById('orgName').value = org || '';
+            document.getElementById('orgTitle').value = title || '';
+            document.getElementById('orgFirstname').value = firstname || '';
+            document.getElementById('orgLastname').value = lastname || '';
+            const userField = document.getElementById('orgUsername');
+            userField.value = username || '';
+            userField.setAttribute('readonly', 'readonly');
+            const passField = document.getElementById('orgPassword');
+            passField.value = '';
+            passField.removeAttribute('required');
+            document.getElementById('passwordLabel').innerHTML = 'New Password (Optional)';
+            document.getElementById('passwordHint').innerText = 'Leave empty to preserve existing password.';
+            document.getElementById('orgRole').value = role || 'ORG_ADMIN';
+            document.getElementById('saveBtn').innerText = 'Update Organizer';
+
+            const modal = new bootstrap.Modal(document.getElementById('organizerModal'));
+            modal.show();
+        }
+    </script>
+</body>
+</html>

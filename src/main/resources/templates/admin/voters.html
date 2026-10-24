@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Manage Voters - Admin')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        <div class="glass-card p-4">
+            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4">
+                <div>
+                    <h3 class="fw-bold text-success mb-1">Registered Voters</h3>
+                    <p class="text-muted small mb-0">Electorate registry, biometric enrollment photos, and ballot submission status.</p>
+                </div>
+                <button class="btn btn-emerald rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addVoterModal">
+                    <i class="fa-solid fa-user-plus me-1"></i> Register Voter
+                </button>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Scoped Tenant Banner for Event Organizers -->
+            <div th:if="${!isSuperAdmin}" class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 rounded-4 p-3 mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-2 bg-primary text-white rounded-circle shadow-sm">
+                        <i class="fa-solid fa-building fa-lg"></i>
+                    </div>
+                    <div>
+                        <strong class="text-dark"><span th:text="${adminOrg}">Infosys</span> Voters Directory</strong>
+                        <div class="small text-muted">Displaying strictly authorized electors enrolled for <b><span th:text="${adminOrg}">Infosys</span></b>. Voters from other organizations and institutions are completely excluded.</div>
+                    </div>
+                </div>
+                <span class="badge bg-primary rounded-pill px-3 py-2" th:text="${voters.size()} + ' Registered Voters'">3 Registered Voters</span>
+            </div>
+
+            <!-- Organization Filter Tabs for Super Admin -->
+            <div th:if="${isSuperAdmin}" class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 bg-light rounded-4 p-2 border">
+                <div class="d-flex flex-wrap align-items-center gap-1">
+                    <span class="small fw-bold text-muted me-2 ms-2"><i class="fa-solid fa-filter me-1"></i> Filter Organization:</span>
+                    <a th:href="@{/admin/voters}" 
+                       class="btn btn-sm rounded-pill px-3 fw-semibold"
+                       th:classappend="${selectedOrg == 'ALL' ? 'btn-dark' : 'btn-outline-secondary'}">
+                        All Organizations
+                    </a>
+                    <a th:each="org : ${distinctOrganizations}"
+                       th:href="@{/admin/voters(org=${org})}"
+                       class="btn btn-sm rounded-pill px-3 fw-semibold"
+                       th:classappend="${selectedOrg == org ? (org == 'Infosys' ? 'btn-primary' : 'btn-success') : 'btn-outline-secondary'}">
+                        <i class="fa-solid fa-building me-1"></i><span th:text="${org}">Infosys</span>
+                    </a>
+                </div>
+                <div class="me-2">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1" th:text="'Showing: ' + ${voters.size()} + ' Voters'">8 Voters</span>
+                </div>
+            </div>
+
+            <!-- Active Organization Filter Notice for Super Admin -->
+            <div th:if="${isSuperAdmin and selectedOrg != 'ALL'}" class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 rounded-3 py-2 px-3 mb-3 small d-flex align-items-center justify-content-between">
+                <span><i class="fa-solid fa-circle-info text-info me-1"></i> Active Filter: Showing only <b><span th:text="${selectedOrg}">Infosys</span></b> voters (<span th:text="${voters.size()}">3</span> enrolled). Other organization voters are hidden.</span>
+                <a th:href="@{/admin/voters}" class="btn btn-sm btn-link text-info p-0 text-decoration-none fw-bold">Show All Organizations &times;</a>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Face Photo</th>
+                            <th th:text="${electionSetting != null ? electionSetting.voterIdLabel : 'Voter ID'}">Voter ID</th>
+                            <th>Full Name</th>
+                            <th>Company / Organization</th>
+                            <th>Electorate Classification</th>
+                            <th>Registered Email</th>
+                            <th>Ballot Cast?</th>
+                            <th>Voted Timestamp</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="v : ${voters}">
+                            <td>
+                                <div class="rounded-circle overflow-hidden border" style="width: 48px; height: 48px;">
+                                    <img th:src="@{'/images/' + ${v.photo}}" onerror="this.src='/static/images/Screenshot.png'" class="w-100 h-100 object-fit-cover" alt="Photo">
+                                </div>
+                            </td>
+                            <td><code class="fw-bold text-success fs-6" th:text="${v.voterId}">HrEn9AbXxtpo6jf</code></td>
+                            <td><strong class="text-dark" th:text="${v.fullName}">Venkatesh GN</strong></td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${v.organizationBadgeClass}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${v.organizationDisplayName}">Infosys</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${v.voterCategoryBadgeClass}">
+                                    <i th:class="${v.voterCategoryIcon} + ' me-1'"></i>
+                                    <span th:text="${v.voterCategoryDisplayName}">Student</span>
+                                </span>
+                                <small class="text-muted d-block mt-1">Field: <span th:text="${v.department}">General</span></small>
+                            </td>
+                            <td><span class="text-muted" th:text="${v.email}">venuv@gmail.com</span></td>
+                            <td>
+                                <span th:if="${v.hasVoted}" class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check-circle me-1"></i> Voted</span>
+                                <span th:unless="${v.hasVoted}" class="badge bg-secondary bg-opacity-25 text-secondary rounded-pill px-3 py-2"><i class="fa-regular fa-clock me-1"></i> Pending</span>
+                            </td>
+                            <td>
+                                <small class="text-muted" th:text="${v.votedAt != null ? v.votedAt : '-'}">-</small>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-1"
+                                        th:data-id="${v.id}"
+                                        th:data-first="${v.firstname}"
+                                        th:data-last="${v.lastname}"
+                                        th:data-email="${v.email}"
+                                        th:data-cat="${v.voterCategory}"
+                                        th:data-dept="${v.department}"
+                                        th:data-org="${v.organization}"
+                                        onclick="openEditVoterModal(this.getAttribute('data-id'), this.getAttribute('data-first'), this.getAttribute('data-last'), this.getAttribute('data-email'), this.getAttribute('data-cat'), this.getAttribute('data-dept'), this.getAttribute('data-org'))">
+                                    <i class="fa-solid fa-user-pen"></i> Edit
+                                </button>
+                                <form th:action="@{/admin/voters/delete}" method="POST" class="d-inline" onsubmit="return confirm('Delete this voter record?');">
+                                    <input type="hidden" name="id" th:value="${v.id}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(voters)}">
+                            <td colspan="9" class="text-center text-muted py-4">No voters registered. Click "Register Voter" above.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Register Voter Modal -->
+    <div class="modal fade" id="addVoterModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success"><i class="fa-solid fa-address-card me-2"></i> Register New Voter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/voters/save}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" th:text="${electionSetting != null ? electionSetting.voterIdLabel + ' (Leave blank to auto-generate)' : 'Voter / Member ID (Leave blank to auto-generate)'}">Voter ID (Leave blank to auto-generate)</label>
+                            <div class="input-group">
+                                <input type="text" name="voterId" id="voterIdInput" class="form-control" placeholder="e.g. HrEn9AbXxtpo6jf">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="generateId()">Generate</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Company / Organization (Tenant Scoping)</label>
+                            <input type="text" name="organization" class="form-control" list="voterOrgOptions" placeholder="e.g. Infosys, Wipro, TCS, CRCE College" th:value="${!isSuperAdmin ? adminOrg : (selectedOrg != 'ALL' ? selectedOrg : 'Infosys')}" th:readonly="${!isSuperAdmin}" required>
+                            <datalist id="voterOrgOptions">
+                                <option value="Infosys">Infosys</option>
+                                <option value="Wipro">Wipro</option>
+                                <option value="TCS">TCS</option>
+                                <option value="CRCE College">CRCE College</option>
+                            </datalist>
+                            <div class="form-text small" th:if="${!isSuperAdmin}">Voters registered here will be strictly enrolled under <b><span th:text="${adminOrg}">Infosys</span></b>.</div>
+                            <div class="form-text small" th:if="${isSuperAdmin}">Designate the company or institution this voter belongs to.</div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Electorate Classification</label>
+                                <select name="voterCategory" class="form-select" required>
+                                    <option value="EMPLOYEE" selected>🏢 Corporate Employee / Staff (Infosys)</option>
+                                    <option value="STUDENT">🎓 Student Electorate</option>
+                                    <option value="OFFICE_STAFF">🏢 Office / Organization Staff</option>
+                                    <option value="FACULTY">👥 Faculty / Academic Staff</option>
+                                    <option value="GENERAL">🌐 General Member</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Department / Division</label>
+                                <input type="text" name="department" class="form-control" value="Cultural & Events Committee" placeholder="e.g. Cultural & Events Committee">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" name="firstname" class="form-control" placeholder="First Name" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" name="lastname" class="form-control" placeholder="Last Name" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email Address (for 2FA OTP)</label>
+                            <input type="email" name="email" class="form-control" placeholder="voter@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Initial Password</label>
+                            <input type="password" name="password" class="form-control" value="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Reference Photo (for Biometric Matching)</label>
+                            <input type="file" name="photo" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-emerald rounded-pill px-4">Register Voter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Voter Electorate Modal -->
+    <div class="modal fade" id="editVoterModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-user-pen me-2"></i> Edit Voter Profile &amp; Classification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/voters/update}" method="POST">
+                    <input type="hidden" name="id" id="editVoterId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Company / Organization</label>
+                            <input type="text" name="organization" id="editVoterOrg" class="form-control" list="voterOrgOptions" th:readonly="${!isSuperAdmin}" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Electorate Classification</label>
+                                <select name="voterCategory" id="editVoterCat" class="form-select" required>
+                                    <option value="EMPLOYEE">🏢 Corporate Employee / Staff (Infosys)</option>
+                                    <option value="STUDENT">🎓 Student Electorate</option>
+                                    <option value="OFFICE_STAFF">🏢 Office / Organization Staff</option>
+                                    <option value="FACULTY">👥 Faculty / Academic Staff</option>
+                                    <option value="GENERAL">🌐 General Member</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Department / Division</label>
+                                <input type="text" name="department" id="editVoterDept" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" name="firstname" id="editVoterFirst" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" name="lastname" id="editVoterLast" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Email Address</label>
+                            <input type="email" name="email" id="editVoterEmail" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+
+    <script>
+        function generateId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let res = '';
+            for (let i = 0; i < 15; i++) {
+                res += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('voterIdInput').value = res;
+        }
+
+        function openEditVoterModal(id, first, last, email, cat, dept, org) {
+            document.getElementById('editVoterId').value = id;
+            document.getElementById('editVoterFirst').value = first;
+            document.getElementById('editVoterLast').value = last;
+            document.getElementById('editVoterEmail').value = email;
+            document.getElementById('editVoterCat').value = cat || 'EMPLOYEE';
+            document.getElementById('editVoterDept').value = dept || 'General';
+            document.getElementById('editVoterOrg').value = org || 'Infosys';
+            new bootstrap.Modal(document.getElementById('editVoterModal')).show();
+        }
+    </script>
+</body>
+</html>

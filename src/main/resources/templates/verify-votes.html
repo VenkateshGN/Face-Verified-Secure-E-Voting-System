@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Cryptographic Vote Integrity Audit')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: voterNavbar}"></div>
+
+    <main class="container py-5 flex-grow-1">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-5">
+            <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-3">
+                <i class="fa-solid fa-shield-halved fa-3x"></i>
+            </div>
+            <h1 class="fw-bold text-success mb-2">VOTE INTEGRITY &amp; RSA CRYPTO AUDIT</h1>
+            <p class="text-muted col-md-8 mx-auto">
+                Independent real-time public verification verifying SHA-256 ballot hashes, AES-256 decrypted payloads, and RSA-2048 digital signatures using public key cryptography.
+            </p>
+            <div class="border-top border-success border-opacity-25 w-25 mx-auto my-3"></div>
+        </div>
+
+        <!-- Organization Filter Pills -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 mb-4 rounded-4 bg-light border">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="text-muted fw-bold small"><i class="fa-solid fa-filter me-1 text-success"></i> Verify By Organization:</span>
+                <a th:href="@{/verify-votes(org='ALL')}" class="btn btn-sm rounded-pill px-3"
+                   th:classappend="${activeOrg == 'ALL' ? 'btn-success text-white shadow-sm' : 'btn-outline-secondary'}">
+                    <i class="fa-solid fa-globe me-1"></i> All Organizations
+                </a>
+                <a th:each="orgName : ${availableOrganizations}"
+                   th:href="@{/verify-votes(org=${orgName})}"
+                   class="btn btn-sm rounded-pill px-3"
+                   th:classappend="${activeOrg == orgName ? 'btn-success text-white shadow-sm' : 'btn-outline-secondary'}">
+                    <i class="fa-solid fa-building me-1"></i> <span th:text="${orgName}">Infosys</span>
+                </a>
+            </div>
+            <div th:if="${activeOrg != 'ALL'}">
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2">
+                    Scope: <strong th:text="${activeOrg}">Infosys</strong>
+                </span>
+            </div>
+        </div>
+
+        <!-- Alert Banner -->
+        <div th:if="${auditReport.tamperedVotes > 0}" class="alert alert-danger rounded-4 p-4 shadow-sm mb-4">
+            <h4 class="fw-bold mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i> CRITICAL WARNING: Tampering Detected!</h4>
+            <p class="mb-0">
+                We detected <strong><span th:text="${auditReport.tamperedVotes}">1</span></strong> tampered vote(s) out of <strong><span th:text="${auditReport.totalVotes}">1</span></strong> total votes checked<span th:if="${activeOrg != 'ALL'}"> in <strong th:text="${activeOrg}">Infosys</strong></span>.
+                All tampered votes have been logged to the security audit trail and excluded from the official election results tallies.
+            </p>
+        </div>
+
+        <div th:unless="${auditReport.tamperedVotes > 0}" class="alert alert-success rounded-4 p-4 shadow-sm mb-4 border border-success border-opacity-50">
+            <h4 class="fw-bold mb-2"><i class="fa-solid fa-circle-check me-2"></i> All Votes Cryptographically Intact!</h4>
+            <p class="mb-0">
+                All <strong><span th:text="${auditReport.totalVotes}">0</span></strong> cast votes<span th:if="${activeOrg != 'ALL'}"> in <strong th:text="${activeOrg}">Infosys</strong></span> are verified successfully against their cryptographic signatures and SHA-256 hashes. Zero anomalies detected.
+            </p>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center">
+                    <i class="fa-solid fa-box-archive fa-2x text-secondary mb-2"></i>
+                    <h2 class="fw-bold text-dark mb-0" th:text="${auditReport.totalVotes}">0</h2>
+                    <small class="text-muted fw-bold">TOTAL VOTES CHECKED</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center">
+                    <i class="fa-solid fa-circle-check fa-2x text-success mb-2"></i>
+                    <h2 class="fw-bold text-success mb-0" th:text="${auditReport.validVotes}">0</h2>
+                    <small class="text-muted fw-bold">VALID ENCRYPTED VOTES</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="glass-card p-4 text-center">
+                    <i class="fa-solid fa-circle-xmark fa-2x text-danger mb-2"></i>
+                    <h2 class="fw-bold text-danger mb-0" th:text="${auditReport.tamperedVotes}">0</h2>
+                    <small class="text-muted fw-bold">TAMPERED / ALTERED VOTES</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Table -->
+        <div class="glass-card p-4">
+            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3">
+                <h5 class="fw-bold text-dark mb-0"><i class="fa-solid fa-microscope text-success me-2"></i> Detailed Cryptographic Verification Breakdown</h5>
+                <button class="btn btn-outline-success btn-sm rounded-pill" onclick="location.reload()">
+                    <i class="fa-solid fa-arrows-rotate me-1"></i> Re-Verify Now
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Vote ID</th>
+                            <th>Voter</th>
+                            <th>Organization</th>
+                            <th>Position</th>
+                            <th>Candidate in Database</th>
+                            <th>Candidate in Decrypted AES</th>
+                            <th>Status</th>
+                            <th>Cryptographic Check Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${auditReport.items}" th:classappend="${!item.valid ? 'table-danger' : ''}">
+                            <td><strong class="text-dark" th:text="'#' + ${item.vote.id}">#1</strong></td>
+                            <td><span th:text="${item.vote.voter.fullName}">Voter</span></td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${item.vote.organization == 'Infosys' ? 'bg-primary text-white' : 'bg-info text-dark'}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${item.vote.organizationDisplayName}">Infosys</span>
+                                </span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border" th:text="${item.vote.position.description}">MLA</span></td>
+                            <td><strong class="text-dark" th:text="${item.vote.candidate.fullName}">Candidate</strong></td>
+                            <td>
+                                <strong th:if="${item.valid}" class="text-success" th:text="${item.originalCandidateName}">Candidate</strong>
+                                <strong th:unless="${item.valid}" class="text-danger" th:text="${item.originalCandidateName}">Original Candidate</strong>
+                            </td>
+                            <td>
+                                <span th:if="${item.valid}" class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-shield me-1"></i> VALID</span>
+                                <span th:unless="${item.valid}" class="badge bg-danger rounded-pill px-3 py-2"><i class="fa-solid fa-ban me-1"></i> TAMPERED</span>
+                            </td>
+                            <td>
+                                <span class="text-muted" th:text="${item.details}">Details</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(auditReport.items)}">
+                            <td colspan="7" class="text-center text-muted py-4">No votes currently registered to audit.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center py-4 text-muted small border-top bg-white">
+        <div class="container">
+            Independent E-Voting Cryptographic Verification Authority &bull; Public Key Cryptography Audit
+        </div>
+    </footer>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

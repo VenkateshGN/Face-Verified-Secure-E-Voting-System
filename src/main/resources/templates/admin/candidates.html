@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Manage Candidates - Admin')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        <div class="glass-card p-4">
+            <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4">
+                <div>
+                    <h3 class="fw-bold text-success mb-1">Election Candidates</h3>
+                    <p class="text-muted small mb-0">Nominees, photos, platform statements, and party symbols.</p>
+                </div>
+                <button class="btn btn-emerald rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+                    <i class="fa-solid fa-user-plus me-1"></i> Add Candidate
+                </button>
+            </div>
+
+            <!-- Alerts -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Role / Position Quick Filter Pills -->
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-3 bg-light rounded-4 border">
+                <span class="small fw-bold text-secondary me-2"><i class="fa-solid fa-filter me-1"></i> Filter by Role:</span>
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 filter-pos-btn active" data-pos="ALL" onclick="filterCandidatesByPos('ALL', this)">
+                    All Roles (<span th:text="${candidates.size()}">0</span>)
+                </button>
+                <button th:each="pos : ${positions}" type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 filter-pos-btn" 
+                        th:data-pos="${pos.id}"
+                        th:onclick="'filterCandidatesByPos(\'' + ${pos.id} + '\', this)'">
+                    <span th:text="${pos.description}">Role</span>
+                    <span class="badge bg-white text-dark border rounded-pill ms-1" th:text="${pos.candidates.size()}">0</span>
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Photo</th>
+                            <th>Position / Office Role</th>
+                            <th>Candidate Name</th>
+                            <th>Company / Organization</th>
+                            <th th:text="${electionSetting != null ? electionSetting.symbolLabel : 'Emblem / Badge / Logo'}">Symbol / Emblem</th>
+                            <th>Platform Bio</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cand : ${candidates}" class="candidate-row" th:data-pos-id="${cand.position != null ? cand.position.id : ''}" th:data-org="${cand.organization}">
+                            <td>
+                                <div class="rounded-circle overflow-hidden border" style="width: 48px; height: 48px;">
+                                    <img th:src="@{'/images/' + ${cand.photo}}" onerror="this.src='/static/images/Screenshot.png'" class="w-100 h-100 object-fit-cover" alt="Photo">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark" th:text="${cand.position != null ? cand.position.description : 'Unassigned'}">MLA</div>
+                                <div th:if="${cand.position != null}" class="mt-1">
+                                    <span class="badge rounded-pill px-2 py-1" style="font-size: 0.72rem;" th:classappend="${cand.position.electorateScopeBadgeClass}">
+                                        <i th:class="${cand.position.electorateScopeIcon} + ' me-1'"></i>
+                                        <span th:text="${cand.position.electorateScopeDisplayName}">Student Body Only</span>
+                                    </span>
+                                </div>
+                            </td>
+                            <td><strong class="text-dark" th:text="${cand.fullName}">Candidate Name</strong></td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-1" th:classappend="${cand.organizationBadgeClass}">
+                                    <i class="fa-solid fa-building me-1"></i>
+                                    <span th:text="${cand.organization}">Infosys</span>
+                                </span>
+                            </td>
+                            <td>
+                                <div th:if="${cand.symbol != null}" class="rounded-2 overflow-hidden border p-1" style="width: 40px; height: 40px;">
+                                    <img th:src="@{'/images/' + ${cand.symbol}}" class="w-100 h-100 object-fit-contain" alt="Symbol">
+                                </div>
+                                <span th:unless="${cand.symbol != null}" class="text-muted small">None</span>
+                            </td>
+                            <td><small class="text-muted d-inline-block text-truncate" style="max-width: 250px;" th:text="${cand.platform}">Platform</small></td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-1"
+                                        th:data-id="${cand.id}"
+                                        th:data-pos-id="${cand.position != null ? cand.position.id : ''}"
+                                        th:data-first="${cand.firstname}"
+                                        th:data-last="${cand.lastname}"
+                                        th:data-platform="${cand.platform}"
+                                        th:data-org="${cand.organization}"
+                                        onclick="openEditCandidateModal(this.getAttribute('data-id'), this.getAttribute('data-pos-id'), this.getAttribute('data-first'), this.getAttribute('data-last'), this.getAttribute('data-platform'), this.getAttribute('data-org'))">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </button>
+                                <form th:action="@{/admin/candidates/delete}" method="POST" class="d-inline" onsubmit="return confirm('Remove this candidate?');">
+                                    <input type="hidden" name="id" th:value="${cand.id}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(candidates)}">
+                            <td colspan="7" class="text-center text-muted py-4">No candidates enrolled yet. Click "Add Candidate" above.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Add Candidate Modal -->
+    <div class="modal fade" id="addCandidateModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success"><i class="fa-solid fa-user-plus me-2"></i> Enroll Candidate</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/candidates/save}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Contesting Position / Role</label>
+                            <select name="positionId" class="form-select" required>
+                                <option value="" disabled selected>Select Position / Role...</option>
+                                <option th:each="pos : ${positions}" th:value="${pos.id}" th:text="${pos.description} + ' — [' + ${pos.electorateScopeDisplayName} + ']'">MLA</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Company / Organization</label>
+                            <input type="text" name="organization" class="form-control" list="candOrgOptions" placeholder="e.g. Infosys, Wipro, TCS" value="Infosys" required>
+                            <datalist id="candOrgOptions">
+                                <option value="Infosys">Infosys</option>
+                                <option value="Wipro">Wipro</option>
+                                <option value="TCS">TCS</option>
+                                <option value="CRCE College">CRCE College</option>
+                            </datalist>
+                            <div class="form-text small">Ensures this candidate is only associated with their relevant company.</div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" name="firstname" class="form-control" placeholder="e.g. Aryan" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" name="lastname" class="form-control" placeholder="e.g. Sharma" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Candidate Portrait Photo</label>
+                            <input type="file" name="photo" class="form-control" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" th:text="${electionSetting != null ? electionSetting.symbolLabel : 'Emblem / House Badge / Logo'}">Emblem / Badge / Logo</label>
+                            <input type="file" name="symbol" class="form-control" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Platform / Manifesto</label>
+                            <textarea name="platform" class="form-control" rows="2" placeholder="Brief election agenda..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-emerald rounded-pill px-4">Enroll Candidate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Candidate Modal -->
+    <div class="modal fade" id="editCandidateModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-user-pen me-2"></i> Edit Candidate Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/candidates/save}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="editCandId">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Contesting Position / Role</label>
+                            <select name="positionId" id="editCandPosId" class="form-select" required>
+                                <option value="" disabled>Select Position / Role...</option>
+                                <option th:each="pos : ${positions}" th:value="${pos.id}" th:text="${pos.description} + ' — [' + ${pos.electorateScopeDisplayName} + ']'">MLA</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Company / Organization</label>
+                            <input type="text" name="organization" id="editCandOrg" class="form-control" list="candOrgOptions" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" name="firstname" id="editCandFirst" class="form-control" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" name="lastname" id="editCandLast" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Update Photo (Leave empty to keep existing)</label>
+                            <input type="file" name="photo" class="form-control" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Update Symbol / Emblem (Leave empty to keep existing)</label>
+                            <input type="file" name="symbol" class="form-control" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Platform / Manifesto</label>
+                            <textarea name="platform" id="editCandPlatform" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">Update Candidate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+
+    <script>
+        function filterCandidatesByPos(posId, btn) {
+            document.querySelectorAll('.filter-pos-btn').forEach(b => {
+                b.classList.remove('btn-success', 'active');
+                b.classList.add('btn-outline-secondary');
+            });
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-success', 'active');
+
+            const rows = document.querySelectorAll('.candidate-row');
+            rows.forEach(row => {
+                if (posId === 'ALL' || row.getAttribute('data-pos-id') === String(posId)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function filterCandidatesByOrg(org, btn) {
+            document.querySelectorAll('.filter-org-btn').forEach(b => {
+                b.classList.remove('btn-dark', 'active');
+                b.classList.add('btn-outline-dark');
+            });
+            btn.classList.remove('btn-outline-dark');
+            btn.classList.add('btn-dark', 'active');
+
+            const rows = document.querySelectorAll('.candidate-row');
+            rows.forEach(row => {
+                const candOrg = row.getAttribute('data-org') || '';
+                if (org === 'ALL' || candOrg.toLowerCase() === org.toLowerCase()) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function openEditCandidateModal(id, posId, first, last, platform, org) {
+            document.getElementById('editCandId').value = id;
+            document.getElementById('editCandPosId').value = posId;
+            document.getElementById('editCandFirst').value = first;
+            document.getElementById('editCandLast').value = last;
+            document.getElementById('editCandPlatform').value = platform || '';
+            document.getElementById('editCandOrg').value = org || 'Infosys';
+            new bootstrap.Modal(document.getElementById('editCandidateModal')).show();
+        }
+    </script>
+</body>
+</html>

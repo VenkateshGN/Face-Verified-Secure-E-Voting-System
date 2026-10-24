@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Admin Profile Settings')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container py-4 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="glass-card p-4 p-md-5">
+                    
+                    <div class="d-flex align-items-center gap-3 border-bottom pb-3 mb-4">
+                        <div class="rounded-circle overflow-hidden border border-success border-2" style="width: 64px; height: 64px;">
+                            <img th:src="@{'/images/' + ${admin.photo}}" onerror="this.src='/static/images/Screenshot.png'" class="w-100 h-100 object-fit-cover" alt="Admin Photo">
+                        </div>
+                        <div>
+                            <h4 class="fw-bold text-success mb-0">Administrator Profile</h4>
+                            <small class="text-muted">Account security credentials and personal information</small>
+                        </div>
+                    </div>
+
+                    <!-- Alerts -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                        <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <form th:action="@{/admin/profile/update}" method="POST" enctype="multipart/form-data">
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-bold">First Name</label>
+                                <input type="text" name="firstname" th:value="${admin.firstname}" class="form-control" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label small fw-bold">Last Name</label>
+                                <input type="text" name="lastname" th:value="${admin.lastname}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Admin Username</label>
+                            <input type="text" th:value="${admin.username}" class="form-control bg-light" readonly>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Update Profile Photo</label>
+                            <input type="file" name="photo" class="form-control" accept="image/*">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-lock me-2 text-warning"></i> Change Password</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Current Password</label>
+                            <input type="password" name="currPassword" class="form-control" placeholder="Enter current password to authorize changes">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">New Password (Leave blank to keep unchanged)</label>
+                            <input type="password" name="newPassword" class="form-control" placeholder="Enter new strong password">
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-emerald rounded-pill px-4">
+                                <i class="fa-solid fa-save me-1"></i> Update Profile
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                <!-- Organization & Election Context Card -->
+                <div class="glass-card p-4 p-md-5 mt-4">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="p-3 rounded-4 bg-success bg-opacity-10 text-success">
+                                <i class="fa-solid fa-sitemap fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold text-success mb-0">Organization &amp; Election Profile</h4>
+                                <small class="text-muted">Target entity, election title, and identifier configuration</small>
+                            </div>
+                        </div>
+                        <span class="badge rounded-pill px-3 py-2" th:classappend="${electionSetting.organizationTypeBadgeClass}">
+                            <i th:class="${electionSetting.organizationTypeIcon} + ' me-1'"></i>
+                            <span th:text="${electionSetting.organizationTypeDisplayName}">Organization Type</span>
+                        </span>
+                    </div>
+
+                    <form th:action="@{/admin/election/settings}" method="POST">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-bold">Organization / Entity Name</label>
+                                <input type="text" name="organizationName" th:value="${electionSetting.organizationName}" class="form-control" placeholder="e.g. St. Xavier's High School / Google Inc. / Apex NGO" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold">Organization Category / Mode</label>
+                                <select name="organizationType" class="form-select" required>
+                                    <option value="GENERAL" th:selected="${electionSetting.organizationType == 'GENERAL'}">Universal / General Entity</option>
+                                    <option value="SCHOOL_COLLEGE" th:selected="${electionSetting.organizationType == 'SCHOOL_COLLEGE'}">🎓 School / College / University</option>
+                                    <option value="CORPORATE" th:selected="${electionSetting.organizationType == 'CORPORATE'}">🏢 Company / Corporate Enterprise</option>
+                                    <option value="COMMUNITY_NGO" th:selected="${electionSetting.organizationType == 'COMMUNITY_NGO'}">🤝 Community / Club / NGO / Society</option>
+                                    <option value="CIVIC_GOVERNMENT" th:selected="${electionSetting.organizationType == 'CIVIC_GOVERNMENT'}">🏛️ Civic / Public Democratic Body</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Election / Selection Title</label>
+                            <input type="text" name="electionTitle" th:value="${electionSetting.electionTitle}" class="form-control" placeholder="e.g. Annual Student Council Election 2026 / Board of Directors Election" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Subtitle / Election Tagline</label>
+                            <textarea name="electionSubtitle" class="form-control" rows="2" placeholder="Brief election description displayed to voters..." th:text="${electionSetting.electionSubtitle}"></textarea>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Voter Identifier Label</label>
+                                <input type="text" name="voterIdLabel" th:value="${electionSetting.voterIdLabel}" class="form-control" placeholder="e.g. Student Roll No / Employee ID / Member ID / Voter ID" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Candidate Emblem / Badge Label</label>
+                                <input type="text" name="symbolLabel" th:value="${electionSetting.symbolLabel}" class="form-control" placeholder="e.g. House Badge / Team Logo / Department Emblem" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Emergency Facial Bypass Passkey</label>
+                                <input type="text" name="emergencyKey" th:value="${electionSetting.emergencyKey}" class="form-control font-monospace" required>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-center">
+                                <div class="form-check form-switch mt-3">
+                                    <input class="form-check-input" type="checkbox" name="livenessCheckEnabled" id="livenessSwitchProfile" th:checked="${electionSetting.livenessCheckEnabled}">
+                                    <label class="form-check-label small fw-bold" for="livenessSwitchProfile">
+                                        Enable AI Facial Liveness Challenge
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="/admin/dashboard" class="text-decoration-none text-muted small">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1 text-success"></i> Open 1-Click Template Presets on Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-emerald rounded-pill px-4">
+                                <i class="fa-solid fa-save me-1"></i> Save Organization Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Admin Portal Login - Control Center')}"></head>
+<body class="d-flex flex-column justify-content-between">
+    <div th:replace="~{fragments/layout :: voterNavbar}"></div>
+
+    <main class="container my-auto py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="glass-card p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-dark bg-opacity-10 text-dark mb-3">
+                            <i class="fa-solid fa-user-shield fa-2x"></i>
+                        </div>
+                        <h2 class="fw-bold text-dark mb-1">Election Authority</h2>
+                        <p class="text-muted small">Official Administrator Control Center</p>
+                    </div>
+
+                    <!-- Alerts -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <form th:action="@{/admin/login}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">ADMINISTRATOR USERNAME</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="e.g. Venkatesh" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary small">MASTER PASSWORD</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Enter admin password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark w-100 py-2 d-flex align-items-center justify-content-center gap-2 rounded-3 fw-bold">
+                            <span>Sign In to Control Center</span>
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                        </button>
+                    </form>
+
+                    <!-- Self-service registration link for organizers -->
+                    <div class="mt-4 pt-3 border-top text-center">
+                        <p class="text-muted small mb-2">Want to manage elections for your company, college, or community?</p>
+                        <a th:href="@{/admin/register-organizer}" class="btn btn-outline-success w-100 rounded-3 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2">
+                            <i class="fa-solid fa-building-user"></i>
+                            <span>Register as Organization / Event Organizer</span>
+                        </a>
+                    </div>
+
+                    <!-- Quick Demo Credentials Hint -->
+                    <div class="card bg-light border-0 rounded-3 mt-4 p-3 small text-muted">
+                        <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-key text-warning me-1"></i> Pre-configured Demo Accounts:</div>
+                        <div class="mb-1">👑 <b>Super Administrator:</b> <code>Venkatesh</code> / <code>password</code> <span class="badge bg-secondary-subtle text-secondary">All Orgs</span></div>
+                        <div>🏢 <b>Infosys Organizer:</b> <code>infosys_admin</code> / <code>password</code> <span class="badge bg-primary-subtle text-primary">Infosys Only</span></div>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <a href="/" class="btn btn-link text-success text-decoration-none small">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Back to Voter Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

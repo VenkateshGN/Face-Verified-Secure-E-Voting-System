@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Admin Dashboard - E-Voting Control Center')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        
+        <!-- Top Banner & Election State -->
+        <!-- Top Banner & Organization Context -->
+        <div class="glass-card p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 border-bottom pb-3">
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <span class="badge rounded-pill px-3 py-1" th:classappend="${electionSetting.organizationTypeBadgeClass}">
+                            <i th:class="${electionSetting.organizationTypeIcon} + ' me-1'"></i>
+                            <span th:text="${electionSetting.organizationTypeDisplayName}">Organization Type</span>
+                        </span>
+                        <h4 class="fw-bold text-dark mb-0" th:text="${electionSetting.organizationName}">Apex Multi-Org Council</h4>
+                    </div>
+                    <h2 class="fw-bold text-success mb-1" th:text="${electionSetting.electionTitle}">Election Control Center Dashboard</h2>
+                    <p class="text-muted small mb-0" th:text="${electionSetting.electionSubtitle}">Live vote tallying, cryptographic integrity monitoring, and blockchain ledger status.</p>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="badge" th:classappend="${electionSetting.status == 'ACTIVE' ? 'bg-success' : (electionSetting.status == 'PAUSED' ? 'bg-warning text-dark' : 'bg-danger')}" style="font-size: 0.9rem; padding: 8px 14px;">
+                        <i class="fa-solid fa-circle text-white me-1 fs-xs"></i> <span th:text="'STATUS: ' + ${electionSetting.status}">ACTIVE</span>
+                    </span>
+                    <form th:action="@{/admin/election/status}" method="POST" class="d-flex gap-1" th:if="${isSuperAdmin}">
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="ACTIVE" th:selected="${electionSetting.status == 'ACTIVE'}">Set Active (Open)</option>
+                            <option value="PAUSED" th:selected="${electionSetting.status == 'PAUSED'}">Set Paused</option>
+                            <option value="CONCLUDED" th:selected="${electionSetting.status == 'CONCLUDED'}">Set Concluded (Sealed)</option>
+                        </select>
+                    </form>
+                    <button th:if="${isSuperAdmin}" class="btn btn-outline-success btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                        <i class="fa-solid fa-gear me-1"></i> Global Settings
+                    </button>
+                    <a th:if="${isSuperAdmin}" href="/admin/organizers" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-users-gear me-1"></i> Organizers Directory
+                    </a>
+                    <a href="/admin/print" class="btn btn-emerald btn-sm rounded-pill px-3"><i class="fa-solid fa-print me-1"></i> Print Results</a>
+                </div>
+            </div>
+            
+            <!-- Quick Preset Mode Pill Indicators (Super Admin view) -->
+            <div th:if="${isSuperAdmin}" class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-1">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <small class="text-muted fw-bold">Supported Election Scenarios:</small>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 small">
+                        <i class="fa-solid fa-graduation-cap me-1"></i> 1. Schools &amp; Colleges
+                    </span>
+                    <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25 rounded-pill px-2 py-1 small">
+                        <i class="fa-solid fa-building me-1"></i> 2. Corporate Companies
+                    </span>
+                    <span class="badge bg-warning bg-opacity-15 text-dark border border-warning border-opacity-50 rounded-pill px-2 py-1 small">
+                        <i class="fa-solid fa-users-line me-1"></i> 3. Communities &amp; NGOs
+                    </span>
+                    <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25 rounded-pill px-2 py-1 small">
+                        <i class="fa-solid fa-landmark me-1"></i> 4. Civic &amp; Public
+                    </span>
+                </div>
+                <div>
+                    <button class="btn btn-link btn-sm text-success text-decoration-none p-0 fw-bold" data-bs-toggle="modal" data-bs-target="#presetModal">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> 1-Click Template Presets &rarr;
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Super Admin Master Controller Bar -->
+        <div th:if="${isSuperAdmin}" class="glass-card p-3 mb-4 rounded-4"
+             th:style="${isViewingSpecificOrg ? 'border: 2px solid #3b82f6; background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.95));' : 'background: #f8fafc; border: 1px solid #e2e8f0;'}">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 text-white rounded-4 shadow-sm" th:classappend="${isViewingSpecificOrg ? 'bg-primary' : 'bg-dark'}">
+                        <i class="fa-solid fa-crown fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-danger rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-shield-halved me-1"></i> Supreme Platform Administrator
+                            </span>
+                            <span th:if="${isViewingSpecificOrg}" class="badge bg-primary text-white rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-building me-1"></i> Active Tenant Scope: <span th:text="${activeOrg}">Infosys</span>
+                            </span>
+                            <span th:unless="${isViewingSpecificOrg}" class="badge bg-secondary rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-globe me-1"></i> Universal View (All Organizations)
+                            </span>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-0">
+                            <span th:if="${isViewingSpecificOrg}">Monitoring <span class="text-primary" th:text="${activeOrg}">Infosys</span> Election Dashboard</span>
+                            <span th:unless="${isViewingSpecificOrg}">Platform Master Election Controller</span>
+                        </h4>
+                        <p class="text-muted small mb-0">
+                            You have supreme administrative authority to monitor live tallies, switch into any organization's election dashboard, or completely remove an organization election.
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Dropdown to select/switch organization -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3 dropdown-toggle fw-semibold shadow-sm" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-building me-1"></i>
+                            <span th:text="${isViewingSpecificOrg ? 'Viewing: ' + activeOrg : 'Switch Organization'}">Switch Organization</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-2">
+                            <li>
+                                <a class="dropdown-item rounded-3 fw-semibold py-2" th:href="@{/admin/dashboard(viewOrg='ALL')}">
+                                    <i class="fa-solid fa-globe me-2 text-secondary"></i> All Organizations (Global Overview)
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li th:each="orgName : ${availableOrganizations}">
+                                <a class="dropdown-item rounded-3 d-flex align-items-center justify-content-between py-2"
+                                   th:href="@{/admin/dashboard(viewOrg=${orgName})}">
+                                    <span><i class="fa-solid fa-building me-2 text-primary"></i> <span th:text="${orgName}">Infosys</span></span>
+                                    <span th:if="${orgName == activeOrg}" class="badge bg-success rounded-pill ms-2">Active</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Reset to All view -->
+                    <a th:if="${isViewingSpecificOrg}" th:href="@{/admin/dashboard(viewOrg='ALL')}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-arrows-rotate me-1"></i> View All Orgs
+                    </a>
+
+                    <!-- Remove Organization Election Button -->
+                    <form th:if="${isViewingSpecificOrg}" th:action="@{/admin/organization/delete-election}" method="POST" class="d-inline"
+                          onsubmit="return confirm('⚠️ CRITICAL ACTION: Are you sure you want to completely remove the election for ' + this.organizationName.value + '? All positions, candidates, and cast votes for this organization will be permanently deleted!');">
+                        <input type="hidden" name="organizationName" th:value="${activeOrg}" />
+                        <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3 shadow-sm">
+                            <i class="fa-solid fa-trash-can me-1"></i> Remove <span th:text="${activeOrg}">Infosys</span> Election
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoped Organization Banner for Event Organizers -->
+        <div th:if="${!isSuperAdmin}" class="glass-card p-4 mb-4 border-primary border-opacity-50" style="background: linear-gradient(135deg, rgba(238, 242, 255, 0.95), rgba(255, 255, 255, 0.95));">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 bg-primary text-white rounded-4 shadow-sm">
+                        <i class="fa-solid fa-building-user fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-primary rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-building me-1"></i> Dedicated Organization Tenant
+                            </span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1" th:text="${currentAdmin != null ? currentAdmin.organizerTitle : 'Event Organizer'}">
+                                Cultural Event Organizer
+                            </span>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-0"><span th:text="${adminOrg}">Infosys</span> Election Management Console</h4>
+                        <p class="text-muted small mb-0">
+                            Logged in as <b><span th:text="${currentAdmin != null ? currentAdmin.fullName : 'Organizer'}">Organizer</span></b>. All positions, candidates, and voters on this dashboard are strictly partitioned to <b><span th:text="${adminOrg}">Infosys</span></b>.
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="/admin/positions" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-sitemap me-1"></i> Add / Edit Positions
+                    </a>
+                    <a href="/admin/candidates" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-user-plus me-1"></i> Manage Candidates
+                    </a>
+                    <a href="/admin/voters" class="btn btn-primary btn-sm rounded-pill px-3">
+                        <i class="fa-solid fa-users me-1"></i> Manage Voter Roll
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+            <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- 4 Stat Metric Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card p-3 d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-primary bg-opacity-10 text-primary">
+                        <i class="fa-solid fa-sitemap fa-2x"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted fw-bold d-block">POSITIONS</small>
+                        <h3 class="fw-bold mb-0 text-dark" th:text="${numPositions}">2</h3>
+                        <a href="/admin/positions" class="small text-decoration-none text-primary">Manage &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card p-3 d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-info bg-opacity-10 text-info">
+                        <i class="fa-solid fa-user-tie fa-2x"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted fw-bold d-block">CANDIDATES</small>
+                        <h3 class="fw-bold mb-0 text-dark" th:text="${numCandidates}">3</h3>
+                        <a href="/admin/candidates" class="small text-decoration-none text-info">Manage &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card p-3 d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-success bg-opacity-10 text-success">
+                        <i class="fa-solid fa-users fa-2x"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted fw-bold d-block">REGISTERED VOTERS</small>
+                        <h3 class="fw-bold mb-0 text-dark" th:text="${totalVoters}">1</h3>
+                        <a href="/admin/voters" class="small text-decoration-none text-success">Manage &rarr;</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-xl-3">
+                <div class="glass-card p-3 d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-warning bg-opacity-10 text-warning">
+                        <i class="fa-solid fa-square-check fa-2x"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted fw-bold d-block">VOTERS VOTED</small>
+                        <h3 class="fw-bold mb-0 text-dark">
+                            <span th:text="${votersVoted}">0</span>
+                            <small class="fs-6 text-muted" th:text="'(' + ${turnoutPercentage} + '%)'">(0%)</small>
+                        </h3>
+                        <a href="/admin/votes" class="small text-decoration-none text-warning">Ballots &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hosted Voter Distribution & Election Time Limit Row -->
+        <div class="row g-4 mb-4">
+            <!-- Voter Access Center Card -->
+            <div class="col-lg-7">
+                <div class="glass-card p-4 h-100 border-primary border-opacity-25" style="background: linear-gradient(135deg, rgba(240, 253, 250, 0.95), rgba(255, 255, 255, 0.95));">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary bg-opacity-15 text-primary p-2 rounded-3">
+                                <i class="fa-solid fa-bullhorn fa-lg"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-0">📢 Voter Access Center (Direct Ballot Portal)</h5>
+                                <small class="text-muted">Dedicated link &amp; scannable QR code for voters to reach their ballot directly.</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary text-white rounded-pill px-3 py-1" th:if="${isViewingSpecificOrg}">
+                            <i class="fa-solid fa-building me-1"></i> <span th:text="${activeOrg}">Infosys</span>
+                        </span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted mb-1">DIRECT SHAREABLE VOTER LINK (HOSTED URL):</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-primary border-end-0"><i class="fa-solid fa-link"></i></span>
+                            <input type="text" id="voterShareLink" class="form-control font-monospace text-dark bg-white border-start-0 ps-0" th:value="${voterDirectUrl}" readonly>
+                            <button class="btn btn-primary px-3 fw-semibold" type="button" onclick="copyVoterLink()">
+                                <i class="fa-solid fa-copy me-1"></i> Copy Link
+                            </button>
+                            <button class="btn btn-outline-primary px-3" type="button" data-bs-toggle="modal" data-bs-target="#voterQrModal">
+                                <i class="fa-solid fa-qrcode me-1"></i> QR Code
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            <i class="fa-solid fa-shield-halved text-success me-1"></i>
+                            Distribute this exact URL via email, Slack, or company portal. Voters only see the clean voting portal and are strictly barred from admin pages.
+                        </small>
+                    </div>
+
+                    <!-- Step-by-Step Voter Isolation Pipeline Info -->
+                    <div class="p-3 bg-white rounded-3 border small">
+                        <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-route text-success me-1"></i> Voter Journey &amp; Isolation Architecture:</div>
+                        <div class="d-flex flex-wrap align-items-center gap-1 text-secondary" style="font-size: 0.8rem;">
+                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-qrcode text-primary me-1"></i> 1. Link / QR</span>
+                            <span>&rarr;</span>
+                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-id-card text-info me-1"></i> 2. Voter Login</span>
+                            <span>&rarr;</span>
+                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-camera text-warning me-1"></i> 3. Face AI Match</span>
+                            <span>&rarr;</span>
+                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-envelope-circle-check text-secondary me-1"></i> 4. OTP 2FA</span>
+                            <span>&rarr;</span>
+                            <span class="badge bg-light text-success border"><i class="fa-solid fa-check-to-slot me-1"></i> 5. Scoped Ballot</span>
+                            <span>&rarr;</span>
+                            <span class="badge bg-light text-primary border"><i class="fa-solid fa-receipt me-1"></i> 6. Crypto Receipt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Election Schedule & Time Limit Card -->
+            <div class="col-lg-5">
+                <div class="glass-card p-4 h-100 border-warning border-opacity-25" style="background: linear-gradient(135deg, rgba(254, 252, 232, 0.95), rgba(255, 255, 255, 0.95));">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-warning bg-opacity-20 text-dark p-2 rounded-3">
+                                <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-0">⏱️ Election Schedule &amp; Time Limit</h5>
+                                <small class="text-muted">Set voting window &amp; countdown timer</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-dark btn-sm rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                            <i class="fa-solid fa-stopwatch me-1"></i> Configure
+                        </button>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="small text-muted fw-bold">ELECTION STATUS:</span>
+                            <span class="badge rounded-pill px-3 py-1 fw-bold" th:classappend="${scheduleInfo.scheduleStatusBadgeClass}" th:text="${scheduleInfo.scheduleStatusLabel}">
+                                Active
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <span class="text-muted">Polls Open (Start):</span>
+                            <strong class="text-dark" th:text="${scheduleInfo.formattedStartTime}">Immediate</strong>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <span class="text-muted">Polls Close (Deadline):</span>
+                            <strong class="text-dark" th:text="${scheduleInfo.formattedEndTime}">No Expiry</strong>
+                        </div>
+                        <div th:if="${scheduleInfo.timeLimitActive and scheduleInfo.votingOpen}" class="p-2 bg-success bg-opacity-10 rounded-3 text-center border border-success border-opacity-25 mt-1">
+                            <small class="text-muted fw-bold d-block">ACTIVE COUNTDOWN REMAINING</small>
+                            <span id="adminDashboardCountdown" class="fs-4 font-monospace fw-bold text-success">--:--:--</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-emerald btn-sm rounded-pill w-100" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                            <i class="fa-solid fa-pen-to-square me-1"></i> Set Time Limit / Active Window
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Split -->
+        <div class="row g-4">
+            
+            <!-- Left Column: Live Election Results Charts -->
+            <div class="col-lg-8">
+                <div class="glass-card p-4">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4">
+                        <h5 class="fw-bold text-success mb-0"><i class="fa-solid fa-chart-column me-2"></i> Live Election Results (Votes Tally)</h5>
+                        <button class="btn btn-outline-success btn-sm rounded-pill" onclick="location.reload()">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh Tally
+                        </button>
+                    </div>
+
+                    <div th:each="pos : ${positions}" class="mb-4 p-3 bg-white rounded-4 border">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h6 class="fw-bold text-dark mb-0" th:text="${pos.description}">Position</h6>
+                            <span class="badge bg-light text-muted border" th:text="'Priority #' + ${pos.priority}">Priority</span>
+                        </div>
+                        
+                        <div style="height: 180px;">
+                            <canvas th:id="'chart_pos_' + ${pos.id}"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Security Auditing & Blockchain Monitor -->
+            <div class="col-lg-4 d-flex flex-column gap-4">
+                
+                <!-- Blockchain Health Card -->
+                <div class="glass-card p-4">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold text-dark mb-0"><i class="fa-solid fa-link text-primary me-2"></i> Blockchain Health</h6>
+                        <span class="badge" th:classappend="${chainResult.valid ? 'bg-success' : 'bg-danger'}" th:text="${chainResult.valid ? 'Chain Intact' : 'Broken Chain'}">Status</span>
+                    </div>
+                    <p class="text-muted small mb-2" th:text="${chainResult.message}">Message</p>
+                    <div class="d-flex justify-content-between small text-muted mb-3">
+                        <span>Total Blocks Sealed:</span>
+                        <strong class="text-dark" th:text="${chainResult.totalBlocks}">0</strong>
+                    </div>
+                    <a href="/admin/blockchain" class="btn btn-outline-primary btn-sm rounded-pill w-100">
+                        <i class="fa-solid fa-cubes me-1"></i> Open Blockchain Explorer
+                    </a>
+                </div>
+
+                <!-- Tamper Audit Log Card -->
+                <div class="glass-card p-4 flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <h6 class="fw-bold text-danger mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i> Tamper Detection Engine</h6>
+                        <span class="badge" th:classappend="${auditReport.tamperedVotes > 0 ? 'bg-danger' : 'bg-success'}" th:text="${auditReport.tamperedVotes > 0 ? auditReport.tamperedVotes + ' Tampered' : '0 Anomalies'}">Status</span>
+                    </div>
+
+                    <div th:if="${auditReport.tamperedVotes > 0}" class="alert alert-danger p-2 small mb-3">
+                        <i class="fa-solid fa-skull-crossbones me-1"></i> <strong>Cryptographic Discrepancy Found!</strong> Tampered votes are excluded from official tallies.
+                    </div>
+
+                    <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                        <table class="table table-sm table-hover small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Voter</th>
+                                    <th>Status</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${auditReport.items}" th:classappend="${!item.valid ? 'table-danger' : ''}">
+                                    <td>
+                                        <strong th:text="${item.vote.voter.fullName}">Voter</strong>
+                                        <br><small class="text-muted" th:text="${item.vote.position.description}">Position</small>
+                                    </td>
+                                    <td>
+                                        <span th:if="${item.valid}" class="badge bg-success">VALID</span>
+                                        <span th:unless="${item.valid}" class="badge bg-danger">TAMPERED</span>
+                                    </td>
+                                    <td>
+                                        <small th:if="${item.valid}" class="text-success"><i class="fa-solid fa-check me-1"></i> Hash & RSA OK</small>
+                                        <small th:unless="${item.valid}" class="text-danger fw-bold" th:text="${item.reasons}">Reason</small>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(auditReport.items)}">
+                                    <td colspan="3" class="text-center text-muted py-3">No votes cast yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3 text-center border-top pt-2">
+                        <a href="/admin/votes" class="btn btn-outline-danger btn-sm rounded-pill w-100">
+                            <i class="fa-solid fa-shield-virus me-1"></i> Test / Inspect Ballots
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Organization & Election Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success">
+                        <i class="fa-solid fa-gear me-2"></i> Organization &amp; Election Settings
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/election/settings}" method="POST">
+                    <div class="modal-body">
+                        <p class="text-muted small mb-4">
+                            Configure this voting system for any organizational context — Schools, Colleges, Corporate Enterprises, Clubs, NGOs, or Civic Elections.
+                        </p>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-bold">Organization / Entity Name</label>
+                                <input type="text" name="organizationName" th:value="${electionSetting.organizationName}" class="form-control" placeholder="e.g. St. Xavier's High School / Google Inc. / Apex NGO" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold">Organization Category / Mode</label>
+                                <select name="organizationType" class="form-select" required>
+                                    <option value="GENERAL" th:selected="${electionSetting.organizationType == 'GENERAL'}">Universal / General Entity</option>
+                                    <option value="SCHOOL_COLLEGE" th:selected="${electionSetting.organizationType == 'SCHOOL_COLLEGE'}">🎓 School / College / University</option>
+                                    <option value="CORPORATE" th:selected="${electionSetting.organizationType == 'CORPORATE'}">🏢 Company / Corporate Enterprise</option>
+                                    <option value="COMMUNITY_NGO" th:selected="${electionSetting.organizationType == 'COMMUNITY_NGO'}">🤝 Community / Club / NGO / Society</option>
+                                    <option value="CIVIC_GOVERNMENT" th:selected="${electionSetting.organizationType == 'CIVIC_GOVERNMENT'}">🏛️ Civic / Public Democratic Body</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Election / Selection Title</label>
+                            <input type="text" name="electionTitle" th:value="${electionSetting.electionTitle}" class="form-control" placeholder="e.g. Annual Student Council Election 2026 / Board of Directors Election" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Subtitle / Election Tagline</label>
+                            <textarea name="electionSubtitle" class="form-control" rows="2" placeholder="Brief election description displayed to voters..." th:text="${electionSetting.electionSubtitle}"></textarea>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Voter Identifier Label</label>
+                                <input type="text" name="voterIdLabel" th:value="${electionSetting.voterIdLabel}" class="form-control" placeholder="e.g. Student Roll No / Employee ID / Member ID / Voter ID" required>
+                                <small class="text-muted">Displayed on login, ballots, and receipts.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Candidate Emblem / Badge Label</label>
+                                <input type="text" name="symbolLabel" th:value="${electionSetting.symbolLabel}" class="form-control" placeholder="e.g. House Badge / Team Logo / Department Emblem" required>
+                                <small class="text-muted">Displayed in candidate enrollment and ballots.</small>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Biometric Emergency Bypass Passkey</label>
+                                <input type="text" name="emergencyKey" th:value="${electionSetting.emergencyKey}" class="form-control font-monospace" placeholder="e.g. VOTE2026" required>
+                                <small class="text-muted">Fallback passkey if a voter's camera is unavailable.</small>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-center">
+                                <div class="form-check form-switch mt-3">
+                                    <input class="form-check-input" type="checkbox" name="livenessCheckEnabled" id="livenessSwitch" th:checked="${electionSetting.livenessCheckEnabled}">
+                                    <label class="form-check-label small fw-bold" for="livenessSwitch">
+                                        Enable AI Facial Liveness Challenge (Anti-Spoofing)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-emerald rounded-pill px-4">
+                            <i class="fa-solid fa-save me-1"></i> Save Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1-Click Multi-Organization Preset Modal -->
+    <div class="modal fade" id="presetModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i> 1-Click Organization Template Presets
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-4">
+                        Select an organization template to instantly configure the election title, identifier labels, and optionally create typical leadership offices for that domain:
+                    </p>
+
+                    <div class="row g-3">
+                        <!-- School / University Preset -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border rounded-4 p-3 shadow-sm hover-shadow bg-light">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                                        <i class="fa-solid fa-graduation-cap fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">School / College / University</h6>
+                                        <small class="text-muted">Student Council &amp; House Elections</small>
+                                    </div>
+                                </div>
+                                <p class="small text-secondary mb-3">
+                                    Offices: <b>Head Boy / Head Girl, President, Sports Captain, Cultural Secretary, House Reps</b>.
+                                    <br>ID Label: <code>Student Roll Number / PRN</code>
+                                </p>
+                                <form th:action="@{/admin/election/apply-preset}" method="POST" class="mt-auto">
+                                    <input type="hidden" name="presetType" value="SCHOOL_COLLEGE">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="populatePositions" id="schoolPos" checked>
+                                        <label class="form-check-label small" for="schoolPos">Include standard school offices</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill w-100">
+                                        Apply School Template
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Company / Corporate Preset -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border rounded-4 p-3 shadow-sm hover-shadow bg-light">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-3 bg-dark bg-opacity-10 text-dark">
+                                        <i class="fa-solid fa-building fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Corporate / Enterprise</h6>
+                                        <small class="text-muted">Board &amp; Employee Council</small>
+                                    </div>
+                                </div>
+                                <p class="small text-secondary mb-3">
+                                    Offices: <b>Board of Directors, Employee Advisory Council, Innovation Lead, Safety Officer</b>.
+                                    <br>ID Label: <code>Employee ID</code>
+                                </p>
+                                <form th:action="@{/admin/election/apply-preset}" method="POST" class="mt-auto">
+                                    <input type="hidden" name="presetType" value="CORPORATE">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="populatePositions" id="corpPos" checked>
+                                        <label class="form-check-label small" for="corpPos">Include standard corporate offices</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill w-100">
+                                        Apply Corporate Template
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Infosys Corporate & Cultural Preset -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border border-primary border-opacity-50 rounded-4 p-3 shadow-sm hover-shadow bg-light">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                                        <i class="fa-solid fa-building-flag fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-primary">Infosys Enterprise</h6>
+                                        <small class="text-muted">Cultural &amp; Event Leadership</small>
+                                    </div>
+                                </div>
+                                <p class="small text-secondary mb-3">
+                                    Offices: <b>Cultural Event Organizer, Employee Welfare Council, Sports Coordinator</b>.
+                                    <br>Electorate: <code>Infosys Employees Only (Strict Tenant Isolation)</code>
+                                </p>
+                                <form th:action="@{/admin/election/apply-preset}" method="POST" class="mt-auto">
+                                    <input type="hidden" name="presetType" value="CORPORATE_INFOSYS">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="populatePositions" id="infyPos" checked>
+                                        <label class="form-check-label small" for="infyPos">Include Cultural Event Organizer &amp; Employees</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100">
+                                        Apply Infosys Template
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Community / NGO Preset -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border rounded-4 p-3 shadow-sm hover-shadow bg-light">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-3 bg-warning bg-opacity-15 text-dark">
+                                        <i class="fa-solid fa-users-line fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Community / Club / NGO</h6>
+                                        <small class="text-muted">Executive Board &amp; Trustees</small>
+                                    </div>
+                                </div>
+                                <p class="small text-secondary mb-3">
+                                    Offices: <b>President / Chairperson, General Secretary, Treasurer, Executive Members</b>.
+                                    <br>ID Label: <code>Membership Card Number</code>
+                                </p>
+                                <form th:action="@{/admin/election/apply-preset}" method="POST" class="mt-auto">
+                                    <input type="hidden" name="presetType" value="COMMUNITY_NGO">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="populatePositions" id="ngoPos" checked>
+                                        <label class="form-check-label small" for="ngoPos">Include standard NGO offices</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-warning text-dark btn-sm rounded-pill w-100">
+                                        Apply Community / NGO Template
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Civic / Public Body Preset -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border rounded-4 p-3 shadow-sm hover-shadow bg-light">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="p-2 rounded-3 bg-info bg-opacity-15 text-info">
+                                        <i class="fa-solid fa-landmark fa-lg"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-dark">Civic / Public Election</h6>
+                                        <small class="text-muted">Constituency Democratic Assembly</small>
+                                    </div>
+                                </div>
+                                <p class="small text-secondary mb-3">
+                                    Offices: <b>Member of Legislative Assembly (MLA), Member of Parliament (MP), Mayor / Councillor</b>.
+                                    <br>ID Label: <code>Electoral Photo ID (EPIC / Voter ID)</code>
+                                </p>
+                                <form th:action="@{/admin/election/apply-preset}" method="POST" class="mt-auto">
+                                    <input type="hidden" name="presetType" value="CIVIC_GOVERNMENT">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="populatePositions" id="civicPos" checked>
+                                        <label class="form-check-label small" for="civicPos">Include standard civic offices</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-info text-dark btn-sm rounded-pill w-100">
+                                        Apply Civic / Public Template
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Election Schedule & Time Limit Modal -->
+    <div class="modal fade" id="scheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-success">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i> Election Schedule &amp; Time Limit
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/election/schedule}" method="POST">
+                    <div class="modal-body">
+                        <p class="text-muted small mb-3">
+                            Set an active voting window for this election. When enabled, voters cannot cast ballots before the start time, see a live countdown on their ballot, and are strictly locked out once the end time elapses.
+                        </p>
+
+                        <!-- Target Organization Scope -->
+                        <div class="mb-3" th:if="${isSuperAdmin}">
+                            <label class="form-label small fw-bold">Target Organization Scope</label>
+                            <select name="targetOrg" class="form-select">
+                                <option value="ALL" th:selected="${activeOrg == 'ALL'}">🌍 Global / Default Schedule (All Organizations)</option>
+                                <option th:each="org : ${availableOrganizations}" th:value="${org}" th:text="'🏢 ' + ${org} + ' Election'" th:selected="${org == activeOrg}">Infosys</option>
+                            </select>
+                        </div>
+                        <input type="hidden" name="targetOrg" th:value="${adminOrg}" th:unless="${isSuperAdmin}">
+
+                        <!-- Time Limit Enforce Toggle -->
+                        <div class="form-check form-switch p-3 bg-light rounded-3 mb-3 border">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" name="timeLimitEnabled" id="scheduleSwitch" value="true" th:checked="${scheduleInfo.timeLimitEnabled}">
+                            <label class="form-check-label fw-bold small text-dark" for="scheduleSwitch">
+                                <i class="fa-solid fa-lock text-danger me-1"></i> Enforce Election Time Limit (Strict Deadline Lock)
+                            </label>
+                            <small class="d-block text-muted ms-4">When toggled off, voting remains open indefinitely.</small>
+                        </div>
+
+                        <!-- Start and End Datetime pickers -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold"><i class="fa-regular fa-calendar-check text-primary me-1"></i> Polls Open (Start Date &amp; Time)</label>
+                                <input type="datetime-local" name="startTime" class="form-control" th:value="${scheduleInfo.startTimeHtml}" id="inputStartTime">
+                                <small class="text-muted">Leave blank to open polls immediately.</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold"><i class="fa-regular fa-calendar-xmark text-danger me-1"></i> Polls Close (Deadline End Time)</label>
+                                <input type="datetime-local" name="endTime" class="form-control" th:value="${scheduleInfo.endTimeHtml}" id="inputEndTime">
+                                <small class="text-muted">Ballot submissions are blocked after this moment.</small>
+                            </div>
+                        </div>
+
+                        <!-- Quick Duration Presets -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-muted d-block mb-1">QUICK DURATION PRESETS (FROM NOW):</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(1)">+1 Hour</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(4)">+4 Hours</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(24)">+24 Hours (1 Day)</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(72)">+3 Days</button>
+                                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="clearScheduleInputs()">Disable Limit</button>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-emerald rounded-pill px-4">
+                            <i class="fa-solid fa-save me-1"></i> Save Schedule
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voter Access QR Code Modal -->
+    <div class="modal fade" id="voterQrModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow text-center p-4">
+                <div class="modal-header border-0 pb-0 justify-content-between">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fa-solid fa-qrcode text-primary me-2"></i> Official Voter Access QR Code
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <p class="text-muted small mb-3">
+                        Voters can scan this QR code with their mobile phone camera to open the dedicated voting portal directly on their device.
+                    </p>
+                    <div class="d-inline-block p-3 bg-white border border-2 border-primary border-opacity-25 rounded-4 shadow-sm mb-3">
+                        <img th:src="${voterQrCodeBase64}" alt="Voter Portal QR Code" class="img-fluid" style="width: 240px; height: 240px;">
+                    </div>
+                    <div class="badge bg-light text-secondary border px-3 py-2 rounded-pill font-monospace small d-block mb-3" th:text="${voterDirectUrl}">
+                        http://localhost:8080/vote
+                    </div>
+                    <button class="btn btn-primary rounded-pill px-4" onclick="copyVoterLink()">
+                        <i class="fa-solid fa-copy me-1"></i> Copy Direct Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+
+    <!-- Chart.js Live Rendering -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const talliesData = /*[[${talliesByPosition}]]*/ {};
+
+        Object.keys(talliesData).forEach(posId => {
+            const ctx = document.getElementById('chart_pos_' + posId);
+            if (!ctx) return;
+
+            const items = talliesData[posId];
+            const labels = items.map(c => c.candidateName);
+            const data = items.map(c => c.voteCount);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votes Cast',
+                        data: data,
+                        backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1.5,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        });
+
+        function copyVoterLink() {
+            const input = document.getElementById('voterShareLink');
+            if (input) {
+                navigator.clipboard.writeText(input.value).then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Voter Link Copied!',
+                        text: 'Direct ballot access link copied to clipboard.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                });
+            }
+        }
+
+        function setPresetHours(hours) {
+            const now = new Date();
+            const future = new Date(now.getTime() + hours * 60 * 60 * 1000);
+            
+            const formatForInput = (d) => {
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            };
+            
+            document.getElementById('inputStartTime').value = formatForInput(now);
+            document.getElementById('inputEndTime').value = formatForInput(future);
+            document.getElementById('scheduleSwitch').checked = true;
+        }
+
+        function clearScheduleInputs() {
+            document.getElementById('inputStartTime').value = '';
+            document.getElementById('inputEndTime').value = '';
+            document.getElementById('scheduleSwitch').checked = false;
+        }
+
+        // Admin Dashboard Live Countdown Timer
+        const adminRemainingSecs = /*[[${scheduleInfo.remainingSeconds}]]*/ 0;
+        let adminTimerSecs = adminRemainingSecs;
+        if (adminTimerSecs > 0) {
+            const adminTimerEl = document.getElementById('adminDashboardCountdown');
+            function updateAdminTimer() {
+                if (adminTimerSecs <= 0) {
+                    if (adminTimerEl) adminTimerEl.innerText = 'CONCLUDED';
+                    return;
+                }
+                const hrs = Math.floor(adminTimerSecs / 3600);
+                const mins = Math.floor((adminTimerSecs % 3600) / 60);
+                const secs = adminTimerSecs % 60;
+                if (adminTimerEl) {
+                    adminTimerEl.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }
+                adminTimerSecs--;
+                setTimeout(updateAdminTimer, 1000);
+            }
+            updateAdminTimer();
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

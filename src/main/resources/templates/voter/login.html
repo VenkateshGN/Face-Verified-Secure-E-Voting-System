@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Voter Login - Face-Verified Secure E-Voting')}"></head>
+<body class="d-flex flex-column justify-content-between">
+    <div th:replace="~{fragments/layout :: voterNavbar}"></div>
+
+    <main class="container my-auto py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="glass-card p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-3">
+                            <i class="fa-solid fa-person-booth fa-2x"></i>
+                        </div>
+                        <div th:if="${effectiveOrg != null and effectiveOrg != '' and effectiveOrg != 'ALL'}" class="mb-2">
+                            <span class="badge bg-primary text-white px-3 py-1 rounded-pill shadow-sm">
+                                <i class="fa-solid fa-building me-1"></i>
+                                <span th:text="${effectiveOrg}">Infosys</span> Corporate Voting Portal
+                            </span>
+                        </div>
+                        <h2 class="fw-bold text-success mb-1" th:text="${electionSetting != null ? electionSetting.electionTitle : 'Secure Leadership E-Voting'}">Secure E-Voting</h2>
+                        <p class="text-muted small mb-2" th:text="${electionSetting != null ? electionSetting.electionSubtitle : 'Multi-Factor Biometric & OTP Authenticated Ballot Portal'}">Multi-Factor Biometric & OTP Authenticated Ballot Portal</p>
+                        <div class="mb-2" th:if="${electionSetting != null}">
+                            <span class="badge rounded-pill px-3 py-1" th:classappend="${electionSetting.organizationTypeBadgeClass}">
+                                <i th:class="${electionSetting.organizationTypeIcon} + ' me-1'"></i>
+                                <span th:text="${electionSetting.organizationName}">Organization Name</span>
+                            </span>
+                        </div>
+
+                        <!-- Schedule Status Badge -->
+                        <div th:if="${scheduleInfo != null}" class="mt-2">
+                            <span class="badge rounded-pill px-3 py-1 small" th:classappend="${scheduleInfo.scheduleStatusBadgeClass}">
+                                <i class="fa-solid fa-clock me-1"></i>
+                                <span th:text="${scheduleInfo.scheduleStatusLabel}">Schedule Status</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Alerts -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                        <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Schedule Not Started Notice -->
+                    <div th:if="${scheduleInfo != null and scheduleInfo.notStarted}" class="alert alert-warning rounded-3 py-2 px-3 small text-center mb-3">
+                        <i class="fa-solid fa-hourglass-start me-1"></i>
+                        <strong>Polls Not Open Yet:</strong> Voting opens on <strong th:text="${scheduleInfo.formattedStartTime}">Start Time</strong>.
+                    </div>
+
+                    <!-- Schedule Expired Notice -->
+                    <div th:if="${scheduleInfo != null and scheduleInfo.expired}" class="alert alert-danger rounded-3 py-2 px-3 small text-center mb-3">
+                        <i class="fa-solid fa-lock me-1"></i>
+                        <strong>Voting Period Closed:</strong> Polls concluded on <strong th:text="${scheduleInfo.formattedEndTime}">End Time</strong>. Ballots are sealed.
+                    </div>
+
+                    <form th:action="@{/login}" method="POST">
+                        <input type="hidden" name="org" th:value="${effectiveOrg}" th:if="${effectiveOrg != null}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small" th:text="${electionSetting != null ? #strings.toUpperCase(electionSetting.voterIdLabel) : 'VOTER ID / ROLL NUMBER / EMPLOYEE ID'}">VOTER ID NUMBER</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-id-card"></i></span>
+                                <input type="text" name="voter" class="form-control border-start-0 ps-0" th:placeholder="${electionSetting != null ? 'Enter your ' + electionSetting.voterIdLabel : 'Enter your ID'}" placeholder="e.g. HrEn9AbXxtpo6jf" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary small">SECURE PASSWORD</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Enter your password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-emerald w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                                th:disabled="${scheduleInfo != null and (scheduleInfo.notStarted or scheduleInfo.expired)}">
+                            <span>Proceed to Face Verification</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </form>
+
+                    <!-- Verification Pipeline Badges -->
+                    <div class="mt-4 pt-3 border-top text-center">
+                        <small class="text-muted d-block mb-2">3-Stage Verification Pipeline:</small>
+                        <div class="d-flex justify-content-center gap-2">
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1"><i class="fa-solid fa-key me-1"></i> 1. Credentials</span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1"><i class="fa-solid fa-camera me-1"></i> 2. Face AI</span>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1"><i class="fa-solid fa-mobile-screen me-1"></i> 3. OTP 2FA</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Demo Credentials Hint -->
+                    <div class="card bg-light border-0 rounded-3 mt-3 p-2 text-center small text-muted">
+                        <div><i class="fa-solid fa-circle-info text-info me-1"></i> <b>Demo Voter ID:</b> <code>HrEn9AbXxtpo6jf</code> | <b>Password:</b> <code>password</code></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center py-3 text-muted small">
+        <div class="container">
+            Face-Verified Secure E-Voting Management System &bull; AES-256 & RSA Cryptographic Ballot Audit
+        </div>
+    </footer>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>

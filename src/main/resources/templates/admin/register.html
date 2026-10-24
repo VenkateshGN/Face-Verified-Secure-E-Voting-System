@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Register Organization Election Portal')}"></head>
+<body class="d-flex flex-column justify-content-between min-vh-100">
+    <div th:replace="~{fragments/layout :: voterNavbar}"></div>
+
+    <main class="container my-auto py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-9">
+                <div class="glass-card p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success mb-3 shadow-sm">
+                            <i class="fa-solid fa-building-user fa-2x"></i>
+                        </div>
+                        <h2 class="fw-bold text-dark mb-1">Self-Service Organizer Registration</h2>
+                        <p class="text-muted small">
+                            Set up an independent, isolated election management portal for your company, college, or community organization.
+                        </p>
+                    </div>
+
+                    <!-- Alerts -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
+                        <i class="fa-solid fa-circle-check me-1"></i> <span th:text="${success}"></span>
+                        <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <form th:action="@{/admin/register-organizer}" method="POST" id="organizerForm">
+                        <div class="card border-0 bg-light rounded-4 p-3 mb-4">
+                            <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-building me-2"></i>1. Organization Details</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-secondary">Organization / Company Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-building"></i></span>
+                                    <input type="text" name="organizationName" class="form-control border-start-0" placeholder="e.g. Infosys, Wipro, TCS, Oxford College" required>
+                                </div>
+                                <div class="form-text small">Your election portal, candidates, and voter rolls will be strictly scoped to this organization.</div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold text-secondary">Initial Election Office / Position Title</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-sitemap"></i></span>
+                                    <input type="text" name="initialPosition" class="form-control border-start-0" value="Cultural Event Organizer" placeholder="e.g. Cultural Event Organizer, Employee Welfare Lead, Club President">
+                                </div>
+                                <div class="form-text small">Automatically creates this election position upon onboarding. You can add more later.</div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 bg-light rounded-4 p-3 mb-4">
+                            <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-user-gear me-2"></i>2. Organizer Admin Profile</h6>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-bold text-secondary">First Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="firstname" class="form-control" placeholder="e.g. Priya" required>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-bold text-secondary">Last Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="lastname" class="form-control" placeholder="e.g. Sharma" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold text-secondary">Your Designation / Organizer Title <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-id-badge"></i></span>
+                                    <input type="text" name="organizerTitle" class="form-control border-start-0" placeholder="e.g. Cultural Committee Head, HR Lead, Dean of Student Affairs" required>
+                                </div>
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-bold text-secondary">Admin Username <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-user"></i></span>
+                                        <input type="text" name="username" class="form-control border-start-0" placeholder="e.g. infosys_cultural_lead" required>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label small fw-bold text-secondary">Password <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-lock"></i></span>
+                                        <input type="password" name="password" class="form-control border-start-0" placeholder="Min 6 characters" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="termsCheck" required checked>
+                            <label class="form-check-label small text-muted" for="termsCheck">
+                                I confirm this organization portal will be managed according to democratic and cryptographic integrity standards.
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-emerald w-100 py-3 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2 shadow">
+                            <i class="fa-solid fa-rocket"></i>
+                            <span>Register &amp; Launch Organization Portal</span>
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <span class="small text-muted">Already registered? </span>
+                        <a th:href="@{/admin/login}" class="small text-success fw-bold text-decoration-none">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In to Existing Control Center
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div th:replace="~{fragments/layout :: scripts}"></div>
+</body>
+</html>
