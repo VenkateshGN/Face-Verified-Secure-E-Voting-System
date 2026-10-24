@@ -65,7 +65,7 @@
                             <label class="form-label fw-semibold text-secondary small" th:text="${electionSetting != null ? #strings.toUpperCase(electionSetting.voterIdLabel) : 'VOTER ID / ROLL NUMBER / EMPLOYEE ID'}">VOTER ID NUMBER</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-id-card"></i></span>
-                                <input type="text" name="voter" class="form-control border-start-0 ps-0" th:placeholder="${electionSetting != null ? 'Enter your ' + electionSetting.voterIdLabel : 'Enter your ID'}" placeholder="e.g. HrEn9AbXxtpo6jf" required autofocus>
+                                <input type="text" name="voter" class="form-control border-start-0 ps-0" th:placeholder="${electionSetting != null ? 'Enter your ' + electionSetting.voterIdLabel : 'Enter your ID'}" placeholder="Enter your ID" required autofocus>
                             </div>
                         </div>
 
@@ -94,10 +94,6 @@
                         </div>
                     </div>
 
-                    <!-- Quick Demo Credentials Hint -->
-                    <div class="card bg-light border-0 rounded-3 mt-3 p-2 text-center small text-muted">
-                        <div><i class="fa-solid fa-circle-info text-info me-1"></i> <b>Demo Voter ID:</b> <code>HrEn9AbXxtpo6jf</code> | <b>Password:</b> <code>password</code></div>
-                    </div>
                 </div>
             </div>
         </div>
