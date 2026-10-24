@@ -154,12 +154,12 @@ The application is pre-configured for zero-friction cloud deployment using **TiD
 
 ---
 
-## 🔑 Default Login Credentials
+## 🔑 Administrator Access
 
-### Platform Super Administrator (`http://localhost:8080/admin/login`)
-* **Username**: `Venkatesh`
-* **Password**: `password`
-* **Role**: `SUPER_ADMIN` (Manages all organization elections, organizers, and settings)
+### Platform Super Administrator Portal (`/admin/login`)
+* **Username**: `[Configured securely during initial setup]`
+* **Password**: `[Configured securely via environment variables / setup]`
+* **Role**: `SUPER_ADMIN` (Full administrative governance over multi-tenant elections, organizers, and cryptographic audit)
 
 ### Independent Public Cryptographic Audit
 * Navigate to **`http://localhost:8080/verify-votes`** to view real-time cryptographic audit results and micro-blockchain ledger verification.
