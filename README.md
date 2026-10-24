@@ -1,6 +1,14 @@
 # 🗳️ Face-Verified Secure E-Voting System with Micro-Blockchain & Biometric Authentication
 
-A modern, enterprise-grade electronic voting management system converted and rebuilt in **Java 21 & Spring Boot 3.3.x**, featuring multi-factor authentication, cryptographic ballot sealing, a **Micro-Blockchain Immutable Ledger**, and real-time **Tamper Detection Auditing**.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://face-verified-secure-e-voting-system.onrender.com)
+[![Database](https://img.shields.io/badge/Database-TiDB%20Cloud-F36E21?style=for-the-badge&logo=mysql&logoColor=white)](https://tidbcloud.com)
+[![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+
+> 🌐 **Live Website:** [https://face-verified-secure-e-voting-system.onrender.com](https://face-verified-secure-e-voting-system.onrender.com)  
+> 🔗 **Public Cryptographic Audit:** [https://face-verified-secure-e-voting-system.onrender.com/verify-votes](https://face-verified-secure-e-voting-system.onrender.com/verify-votes)
+
+A modern, enterprise-grade electronic voting management system rebuilt in **Java 21 & Spring Boot 3.3.x**, featuring multi-factor authentication, cryptographic ballot sealing, a **Micro-Blockchain Immutable Ledger**, multi-tenant election isolation, and real-time **Tamper Detection Auditing**.
 
 ---
 
