@@ -33,6 +33,15 @@ build/
 !.vscode/launch.json
 !.vscode/tasks.json
 
+### Security, Keys & Sensitive Files ###
+keys/
+*.pem
+*.key
+.env
+.env.*
+application-tidb.properties
+application-local.properties
+
 ### Data and Captured Faces ###
 /data/
 /captured_faces/

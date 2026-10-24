@@ -38,6 +38,35 @@ A modern, enterprise-grade electronic voting management system converted and reb
 
 ---
 
+## 📸 Visual Walkthrough & System Screenshots
+
+### 1. Multi-Stage Voter Authentication & Digital Ballot
+| Direct Voter Access & Tenant Branding | Biometric AI Face Verification |
+| :---: | :---: |
+| ![Voter Portal](screenshots/01_voter_portal.png) | ![Face Verification](screenshots/02_face_verification.png) |
+| **Two-Factor OTP Security** | **Digital Ballot with Live Countdown** |
+| ![OTP Verification](screenshots/03_otp_2fa.png) | ![Ballot Countdown](screenshots/04_ballot_countdown.png) |
+| **Atomic Ballot Preview & Review** | **Cryptographic Zero-Knowledge Receipt** |
+| ![Ballot Preview](screenshots/05_ballot_preview.png) | ![Ballot Receipt](screenshots/06_ballot_receipt.png) |
+
+---
+
+### 2. Administrator & Organizer Governance Portals
+| Super Admin Master Dashboard | Election Time Limit & Scheduling |
+| :---: | :---: |
+| ![Admin Dashboard](screenshots/08_admin_dashboard.png) | ![Schedule Configuration](screenshots/09_schedule_timer.png) |
+| **Instant Voter Access QR & Link Center** | **Scoped Tenant Dashboard (Infosys)** |
+| ![Voter QR Center](screenshots/10_voter_qr_access.png) | ![Tenant Dashboard](screenshots/11_tenant_dashboard.png) |
+
+---
+
+### 3. Cryptographic Audit & Blockchain Explorer
+| Micro-Blockchain Immutable Ledger | Public Ledger Verification |
+| :---: | :---: |
+| ![Blockchain Ledger](screenshots/07_blockchain_ledger.png) | ![Public Verification](screenshots/12_public_verify.png) |
+
+---
+
 ## 🏢 Multi-Organization & Multi-Context Leader Selection
 
 The platform is designed to conduct leader elections for any institution, organization, or assembly:
