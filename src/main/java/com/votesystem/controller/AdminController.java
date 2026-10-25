@@ -126,51 +126,73 @@ public class AdminController {
                                           HttpServletRequest request,
                                           HttpSession session,
                                           RedirectAttributes redirectAttrs) {
-        if (adminRepo.existsByUsername(username.trim())) {
-            redirectAttrs.addFlashAttribute("error", "Username '" + username + "' is already taken. Please pick another username.");
+        try {
+            if (organizationName == null || organizationName.isBlank()) {
+                redirectAttrs.addFlashAttribute("error", "Organization name is required.");
+                return "redirect:/admin/register-organizer";
+            }
+            if (username == null || username.isBlank() || password == null || password.isBlank()) {
+                redirectAttrs.addFlashAttribute("error", "Username and password are required.");
+                return "redirect:/admin/register-organizer";
+            }
+            if (adminRepo.existsByUsername(username.trim())) {
+                redirectAttrs.addFlashAttribute("error", "Username '" + username.trim() + "' is already taken. Please pick another username.");
+                return "redirect:/admin/register-organizer";
+            }
+
+            String org = organizationName.trim();
+            Admin admin = new Admin(
+                    username.trim(),
+                    passwordEncoder.encode(password.trim()),
+                    firstname != null ? firstname.trim() : "",
+                    lastname != null ? lastname.trim() : "",
+                    "admin.jpg",
+                    "ORG_ADMIN",
+                    org,
+                    organizerTitle != null ? organizerTitle.trim() : "Event Organizer"
+            );
+            adminRepo.save(admin);
+
+            // Automatically create initial starter position for this organization if not existing
+            boolean hasPos = positionRepo.findAll().stream()
+                    .anyMatch(p -> org.equalsIgnoreCase(p.getTargetOrganization()));
+            if (!hasPos) {
+                String posTitle = (initialPosition != null && !initialPosition.isBlank()) ? initialPosition.trim() : "Cultural Event Organizer";
+                Position starterPos = new Position(posTitle, 1, 1, "OFFICE_ORGANIZATION", "ALL", org);
+                positionRepo.save(starterPos);
+            }
+
+            String clientIp = request.getRemoteAddr();
+            if (clientIp != null && clientIp.length() > 45) {
+                clientIp = clientIp.substring(0, 45);
+            }
+            auditRepo.save(new AuditLog(
+                    "Organizer Registered",
+                    "ONBOARDING",
+                    clientIp,
+                    "Organization onboarded: " + org + " with Organizer Admin: " + admin.getUsername() + " (" + admin.getOrganizerTitle() + ")"
+            ));
+
+            // Auto login
+            session.setAttribute("adminId", admin.getId());
+            session.setAttribute("adminUsername", admin.getUsername());
+            session.setAttribute("adminName", admin.getFullName());
+            session.setAttribute("adminPhoto", admin.getPhoto());
+            session.setAttribute("adminRole", admin.getRole());
+            session.setAttribute("adminOrg", admin.getOrganization());
+            session.setAttribute("adminTitle", admin.getOrganizerTitle());
+
+            redirectAttrs.addFlashAttribute("success", "Welcome " + admin.getFullName() + "! Your organization portal for " + org + " is ready.");
+            return "redirect:/admin/dashboard";
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            log.error("Data integrity conflict while registering organization: {}", ex.getMessage());
+            redirectAttrs.addFlashAttribute("error", "Registration error: An account or organization with these details already exists.");
+            return "redirect:/admin/register-organizer";
+        } catch (Exception ex) {
+            log.error("Unexpected error registering organization: ", ex);
+            redirectAttrs.addFlashAttribute("error", "Failed to create organization: " + ex.getMessage());
             return "redirect:/admin/register-organizer";
         }
-
-        String org = organizationName.trim();
-        Admin admin = new Admin(
-                username.trim(),
-                passwordEncoder.encode(password),
-                firstname.trim(),
-                lastname.trim(),
-                "admin.jpg",
-                "ORG_ADMIN",
-                org,
-                organizerTitle.trim()
-        );
-        adminRepo.save(admin);
-
-        // Automatically create initial starter position for this organization if not existing
-        boolean hasPos = positionRepo.findAll().stream()
-                .anyMatch(p -> org.equalsIgnoreCase(p.getTargetOrganization()));
-        if (!hasPos) {
-            String posTitle = (initialPosition != null && !initialPosition.isBlank()) ? initialPosition.trim() : "Cultural Event Organizer";
-            Position starterPos = new Position(posTitle, 1, 1, "OFFICE_ORGANIZATION", "ALL", org);
-            positionRepo.save(starterPos);
-        }
-
-        auditRepo.save(new AuditLog(
-                "Organizer Registered",
-                "ONBOARDING",
-                request.getRemoteAddr(),
-                "Organization onboarded: " + org + " with Organizer Admin: " + admin.getUsername() + " (" + admin.getOrganizerTitle() + ")"
-        ));
-
-        // Auto login
-        session.setAttribute("adminId", admin.getId());
-        session.setAttribute("adminUsername", admin.getUsername());
-        session.setAttribute("adminName", admin.getFullName());
-        session.setAttribute("adminPhoto", admin.getPhoto());
-        session.setAttribute("adminRole", admin.getRole());
-        session.setAttribute("adminOrg", admin.getOrganization());
-        session.setAttribute("adminTitle", admin.getOrganizerTitle());
-
-        redirectAttrs.addFlashAttribute("success", "Welcome " + admin.getFullName() + "! Your organization portal for " + org + " is ready.");
-        return "redirect:/admin/dashboard";
     }
 
     @GetMapping("/logout")
@@ -1242,58 +1264,74 @@ public class AdminController {
             return "redirect:/admin/dashboard";
         }
 
-        if (id == null) {
-            if (adminRepo.existsByUsername(username.trim())) {
-                redirectAttrs.addFlashAttribute("error", "Username '" + username + "' is already in use.");
-                return "redirect:/admin/organizers";
-            }
-            if (password == null || password.isBlank()) {
-                redirectAttrs.addFlashAttribute("error", "Password is required for a new organizer account.");
-                return "redirect:/admin/organizers";
-            }
-            Admin newAdmin = new Admin(
-                    username.trim(),
-                    passwordEncoder.encode(password.trim()),
-                    firstname.trim(),
-                    lastname.trim(),
-                    "admin.jpg",
-                    role != null ? role.trim() : "ORG_ADMIN",
-                    organization.trim(),
-                    organizerTitle.trim()
-            );
-            adminRepo.save(newAdmin);
+        try {
+            if (id == null) {
+                if (username == null || username.isBlank()) {
+                    redirectAttrs.addFlashAttribute("error", "Login username is required.");
+                    return "redirect:/admin/organizers";
+                }
+                if (organization == null || organization.isBlank()) {
+                    redirectAttrs.addFlashAttribute("error", "Organization name is required.");
+                    return "redirect:/admin/organizers";
+                }
+                if (adminRepo.existsByUsername(username.trim())) {
+                    redirectAttrs.addFlashAttribute("error", "Username '" + username.trim() + "' is already in use.");
+                    return "redirect:/admin/organizers";
+                }
+                if (password == null || password.isBlank()) {
+                    redirectAttrs.addFlashAttribute("error", "Password is required for a new organizer account.");
+                    return "redirect:/admin/organizers";
+                }
+                Admin newAdmin = new Admin(
+                        username.trim(),
+                        passwordEncoder.encode(password.trim()),
+                        firstname != null ? firstname.trim() : "",
+                        lastname != null ? lastname.trim() : "",
+                        "admin.jpg",
+                        role != null ? role.trim() : "ORG_ADMIN",
+                        organization.trim(),
+                        organizerTitle != null ? organizerTitle.trim() : "Event Organizer"
+                );
+                adminRepo.save(newAdmin);
 
-            // Auto-create initial position if organization has no position yet
-            String org = organization.trim();
-            boolean hasPos = positionRepo.findAll().stream()
-                    .anyMatch(p -> org.equalsIgnoreCase(p.getTargetOrganization()));
-            if (!hasPos && !"ALL".equalsIgnoreCase(org)) {
-                Position starterPos = new Position("Cultural Event Organizer", 1, 1, "OFFICE_ORGANIZATION", "ALL", org);
-                positionRepo.save(starterPos);
-            }
+                // Auto-create initial position if organization has no position yet
+                String org = organization.trim();
+                boolean hasPos = positionRepo.findAll().stream()
+                        .anyMatch(p -> org.equalsIgnoreCase(p.getTargetOrganization()));
+                if (!hasPos && !"ALL".equalsIgnoreCase(org)) {
+                    Position starterPos = new Position("Cultural Event Organizer", 1, 1, "OFFICE_ORGANIZATION", "ALL", org);
+                    positionRepo.save(starterPos);
+                }
 
-            auditRepo.save(new AuditLog("Organizer Created", "ADMIN_MGMT", "SUPER_ADMIN", "Created organizer: " + username + " for " + org));
-            redirectAttrs.addFlashAttribute("success", "Organizer account created for " + org + " (" + username + ").");
-        } else {
-            Optional<Admin> existingOpt = adminRepo.findById(id);
-            if (existingOpt.isEmpty()) {
-                redirectAttrs.addFlashAttribute("error", "Organizer not found.");
-                return "redirect:/admin/organizers";
+                auditRepo.save(new AuditLog("Organizer Created", "ADMIN_MGMT", "SUPER_ADMIN", "Created organizer: " + username.trim() + " for " + org));
+                redirectAttrs.addFlashAttribute("success", "Organizer account created for " + org + " (" + username.trim() + ").");
+            } else {
+                Optional<Admin> existingOpt = adminRepo.findById(id);
+                if (existingOpt.isEmpty()) {
+                    redirectAttrs.addFlashAttribute("error", "Organizer not found.");
+                    return "redirect:/admin/organizers";
+                }
+                Admin target = existingOpt.get();
+                target.setFirstname(firstname != null ? firstname.trim() : "");
+                target.setLastname(lastname != null ? lastname.trim() : "");
+                target.setOrganization(organization != null ? organization.trim() : "ALL");
+                target.setOrganizerTitle(organizerTitle != null ? organizerTitle.trim() : "Event Organizer");
+                if (role != null && !role.isBlank()) {
+                    target.setRole(role.trim());
+                }
+                if (password != null && !password.isBlank()) {
+                    target.setPassword(passwordEncoder.encode(password.trim()));
+                }
+                adminRepo.save(target);
+                auditRepo.save(new AuditLog("Organizer Updated", "ADMIN_MGMT", "SUPER_ADMIN", "Updated organizer: " + target.getUsername() + " (" + target.getOrganization() + ")"));
+                redirectAttrs.addFlashAttribute("success", "Organizer details updated successfully.");
             }
-            Admin target = existingOpt.get();
-            target.setFirstname(firstname.trim());
-            target.setLastname(lastname.trim());
-            target.setOrganization(organization.trim());
-            target.setOrganizerTitle(organizerTitle.trim());
-            if (role != null && !role.isBlank()) {
-                target.setRole(role.trim());
-            }
-            if (password != null && !password.isBlank()) {
-                target.setPassword(passwordEncoder.encode(password.trim()));
-            }
-            adminRepo.save(target);
-            auditRepo.save(new AuditLog("Organizer Updated", "ADMIN_MGMT", "SUPER_ADMIN", "Updated organizer: " + target.getUsername() + " (" + target.getOrganization() + ")"));
-            redirectAttrs.addFlashAttribute("success", "Organizer details updated successfully.");
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            log.error("Data integrity error saving organizer: {}", ex.getMessage());
+            redirectAttrs.addFlashAttribute("error", "Conflict: An organizer with this username or organization already exists.");
+        } catch (Exception ex) {
+            log.error("Unexpected error saving organizer: ", ex);
+            redirectAttrs.addFlashAttribute("error", "Error saving organizer: " + ex.getMessage());
         }
 
         return "redirect:/admin/organizers";
