@@ -75,6 +75,73 @@ A modern, enterprise-grade electronic voting management system rebuilt in **Java
 
 ---
 
+## 🧭 System Endpoints & Routing Architecture
+
+The platform exposes clearly demarcated, role-guarded endpoints across the Voter Authentication Pipeline, Cryptographic Ballot Engine, Public Audit Ledgers, and Multi-Tenant Administration.
+
+### 1. 🗳️ Voter Authentication & Ballot Pipeline
+| Method | Route | Access Level | Description |
+|:---:|:---|:---:|:---|
+| `GET` | `/` | Public | Automatic entry router directing users to active authentication stage or login. |
+| `GET` | `/login` | Public | Primary Voter ID authentication portal with dynamic institutional branding. |
+| `GET` | `/vote` | Public | Direct voter ballot portal link. |
+| `GET` | `/vote/{org}` | Public | Organization-scoped voter portal link (e.g. `/vote/Infosys`). |
+| `POST` | `/login` | Public | Validates voter identifier and BCrypt hashed credentials; initiates biometrics. |
+| `GET` | `/verify-face` | Voter (Session) | Renders biometric AI liveness challenge and webcam capture canvas. |
+| `POST` | `/verify-face` | Voter (Session) | Submits captured face for OpenCV/DeepFace AI matching or emergency bypass. |
+| `GET` | `/verify-otp` | Voter (Session) | Renders two-factor authentication (2FA) input with 5-minute expiry countdown. |
+| `POST` | `/verify-otp` | Voter (Session) | Validates time-bounded 6-digit cryptographic OTP. |
+| `POST` | `/resend-otp` | Voter (Session) | Dispatches fresh OTP with 30-second rate-limiting cooldown. |
+| `GET` | `/ballot` | Voter (Authenticated) | Scoped electronic ballot restricted to voter's organization and electorate division. |
+| `POST` | `/ballot/submit` | Voter (Authenticated) | **Atomic Ballot Sealing**: Executes AES-256 encryption, RSA-2048 signing, SHA-256 hashing, and micro-blockchain block generation. |
+| `GET` | `/receipt` | Voter (Authenticated) | Displays zero-knowledge receipt with Tracking Token UUID and ZXing QR code. |
+| `GET` | `/logout` | Voter | Terminates voter session and invalidates active authentication tokens. |
+
+### 2. 🔗 Public Cryptographic Audit & Verification
+| Method | Route | Access Level | Description |
+|:---:|:---|:---:|:---|
+| `GET` | `/verify-votes` | Public | Real-time public audit dashboard with micro-blockchain explorer, Genesis block validation, and tamper-detection health. |
+| `GET` | `/verify-receipt` | Public | Zero-knowledge ballot verification tool allowing voters to inspect their sealed vote in the immutable ledger via UUID or QR scan. |
+| `GET` | `/api/election-results` | Public REST | JSON API returning live authenticated vote tallies, candidate statistics, and voter turnout metrics. |
+
+### 3. 🏢 Platform Administration & Multi-Tenant Governance
+| Method | Route | Access Level | Description |
+|:---:|:---|:---:|:---|
+| `GET` | `/admin/login` | Public | Administrative sign-in portal. |
+| `POST` | `/admin/login` | Public | Authenticates administrators with BCrypt and loads tenant-specific session scope. |
+| `GET` | `/admin/logout` | Admin | Clears administrative session tokens and returns to login. |
+| `GET` | `/admin/register-organizer` | Public | Self-service organization onboarding portal (independent tenant creation). |
+| `POST` | `/admin/register-organizer` | Public | Provisions new organization tenant, administrator account, and starter office. |
+| `GET` | `/admin/dashboard` | Admin | Master command dashboard: analytics cards, Chart.js tallies, voter QR center, and election timer. |
+| `GET` | `/admin/positions` | Admin | Position roster with division scoping (Student, Corporate, NGO, All). |
+| `POST` | `/admin/positions/save` | Admin | Creates or updates an election office with maximum allowable vote constraints. |
+| `POST` | `/admin/positions/delete` | Admin | Safely deletes a position and cascades candidate relationships. |
+| `GET` | `/admin/candidates` | Admin | Candidate management console with party symbols, bios, and portrait uploads. |
+| `POST` | `/admin/candidates/save` | Admin | Registers candidate profile, platform statement, and organizational tag. |
+| `POST` | `/admin/candidates/delete` | Admin | Removes candidate from ballot rosters. |
+| `GET` | `/admin/voters` | Admin | Voter registration directory partitioned by organizational boundaries. |
+| `POST` | `/admin/voters/save` | Admin | Provisions voter account with alphanumeric ID, credentials, and facial reference. |
+| `POST` | `/admin/voters/update` | Admin | Updates voter details and contact email. |
+| `POST` | `/admin/voters/delete` | Admin | Removes voter profile from roll. |
+| `GET` | `/admin/votes` | Admin | Inspects live cast ballots, decrypted payload mirrors, and cryptographic signatures. |
+| `POST` | `/admin/votes/reset` | Admin | Administrative election ballot purge with confirmation safeguard. |
+| `POST` | `/admin/votes/simulate-tamper` | Admin | Interactive tamper simulator for demonstration and audit engine testing. |
+| `GET` | `/admin/blockchain` | Admin | Detailed micro-blockchain ledger inspector (block height, previous hash, Merkle root, nonce). |
+| `GET` | `/admin/audit` | Admin | Security audit trail recording onboarding, logins, schedule changes, and anomalies. |
+| `GET` | `/admin/print` | Admin | Certified official election declaration certificate with digital seal and winner rankings. |
+| `GET` | `/admin/profile` | Admin | Administrator profile, password updates, and universal branding configuration. |
+| `POST` | `/admin/profile/update` | Admin | Updates administrator profile credentials and credentials photo. |
+| `POST` | `/admin/election/status` | Super Admin | State machine toggling global election status (`ACTIVE`, `PAUSED`, `CONCLUDED`). |
+| `POST` | `/admin/election/schedule` | Admin | Sets election start/end time windows and activates real-time countdown lockouts. |
+| `POST` | `/admin/election/settings` | Admin | Customizes organization name, institution type, badge terminology, and ID label. |
+| `POST` | `/admin/election/apply-preset` | Super Admin | 1-Click institutional preset loader (School/College, Corporate, Society, Civic). |
+| `GET` | `/admin/organizers` | Super Admin | Multi-tenant organizer governance portal managing all registered organizations. |
+| `POST` | `/admin/organizers/save` | Super Admin | Creates or edits organization organizer accounts and tenant privileges. |
+| `POST` | `/admin/organizers/delete/{id}` | Super Admin | Removes organizer credentials while retaining scoped election records. |
+| `POST` | `/admin/organization/delete-election` | Super Admin | Cascade purges entire election tenant (positions, candidates, and votes). |
+
+---
+
 ## 🏢 Multi-Organization & Multi-Context Leader Selection
 
 The platform is designed to conduct leader elections for any institution, organization, or assembly:
