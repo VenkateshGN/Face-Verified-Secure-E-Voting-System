@@ -121,7 +121,7 @@ public class BallotController {
     }
 
     @PostMapping("/ballot/submit")
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional
     public String submitBallot(@RequestParam Map<String, String> allParams,
                                HttpServletRequest request,
                                HttpSession session,

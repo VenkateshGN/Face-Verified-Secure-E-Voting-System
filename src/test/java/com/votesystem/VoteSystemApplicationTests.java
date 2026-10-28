@@ -503,4 +503,15 @@ class VoteSystemApplicationTests {
 
         assertTrue(ballotController.isPositionEligibleForVoter(pos, v), "Voter with Inovation Hub must be eligible for Invation Hub position");
     }
+
+    @Test
+    void testUnauthenticatedUserCannotAccessAdminDashboard() {
+        org.springframework.mock.web.MockHttpSession session = new org.springframework.mock.web.MockHttpSession();
+        // No adminId in session (e.g. voter session or anonymous visitor)
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        org.springframework.ui.ConcurrentModel model = new org.springframework.ui.ConcurrentModel();
+
+        String view = adminController.dashboard(null, model, request, session);
+        assertEquals("redirect:/admin/login", view, "Unauthenticated user must be redirected to /admin/login instead of seeing Super Admin dashboard");
+    }
 }

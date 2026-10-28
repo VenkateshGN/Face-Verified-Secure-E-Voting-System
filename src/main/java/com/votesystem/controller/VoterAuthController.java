@@ -129,6 +129,16 @@ public class VoterAuthController {
             return "redirect:/login" + orgQuerySuffix;
         }
 
+        // Strip any residual administrative session attributes to isolate voter context
+        session.removeAttribute("adminId");
+        session.removeAttribute("adminUsername");
+        session.removeAttribute("adminName");
+        session.removeAttribute("adminPhoto");
+        session.removeAttribute("adminRole");
+        session.removeAttribute("adminOrg");
+        session.removeAttribute("adminTitle");
+        session.removeAttribute("superAdminViewOrg");
+
         // Check if voter has already voted
         if (voter.isHasVoted()) {
             session.setAttribute("voterId", voter.getVoterId());

@@ -95,6 +95,15 @@ public class AdminController {
             return "redirect:/admin/login";
         }
 
+        // Clear voter attributes when admin logs in
+        session.removeAttribute("voterId");
+        session.removeAttribute("voterDbId");
+        session.removeAttribute("voterName");
+        session.removeAttribute("voterPhoto");
+        session.removeAttribute("voterOrg");
+        session.removeAttribute("step");
+        session.removeAttribute("trackingToken");
+
         session.setAttribute("adminId", admin.getId());
         session.setAttribute("adminUsername", admin.getUsername());
         session.setAttribute("adminName", admin.getFullName());
@@ -175,6 +184,14 @@ public class AdminController {
             ));
 
             // Auto login
+            session.removeAttribute("voterId");
+            session.removeAttribute("voterDbId");
+            session.removeAttribute("voterName");
+            session.removeAttribute("voterPhoto");
+            session.removeAttribute("voterOrg");
+            session.removeAttribute("step");
+            session.removeAttribute("trackingToken");
+
             session.setAttribute("adminId", admin.getId());
             session.setAttribute("adminUsername", admin.getUsername());
             session.setAttribute("adminName", admin.getFullName());
@@ -220,8 +237,11 @@ public class AdminController {
     public String dashboard(@RequestParam(value = "viewOrg", required = false) String viewOrgParam,
                             Model model, HttpServletRequest request, HttpSession session) {
         Admin currentAdmin = getLoggedInAdmin(session);
-        boolean isSuper = currentAdmin == null || currentAdmin.isSuperAdmin();
-        String adminOrg = (currentAdmin != null && currentAdmin.getOrganization() != null) ? currentAdmin.getOrganization().trim() : "ALL";
+        if (currentAdmin == null) {
+            return "redirect:/admin/login";
+        }
+        boolean isSuper = currentAdmin.isSuperAdmin();
+        String adminOrg = (currentAdmin.getOrganization() != null) ? currentAdmin.getOrganization().trim() : "ALL";
 
         if (isSuper && viewOrgParam != null) {
             if ("ALL".equalsIgnoreCase(viewOrgParam.trim()) || "CLEAR".equalsIgnoreCase(viewOrgParam.trim())) {
@@ -341,8 +361,9 @@ public class AdminController {
     @GetMapping("/positions")
     public String listPositions(Model model, HttpSession session) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         List<Position> allPositions = positionRepo.findAllByOrderByPriorityAsc();
         List<Position> positions = isSuper ? allPositions : allPositions.stream()
@@ -368,8 +389,9 @@ public class AdminController {
                                HttpSession session,
                                RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         Position position = (id != null) ? positionRepo.findById(id).orElse(new Position()) : new Position();
 
@@ -400,8 +422,9 @@ public class AdminController {
     @PostMapping("/positions/delete")
     public String deletePosition(@RequestParam("id") Long id, HttpSession session, RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         Position position = positionRepo.findById(id).orElse(null);
         if (position != null) {
@@ -420,8 +443,9 @@ public class AdminController {
     @GetMapping("/candidates")
     public String listCandidates(Model model, HttpSession session) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         List<Candidate> allCandidates = candidateRepo.findAll();
         List<Candidate> candidates = isSuper ? allCandidates : allCandidates.stream()
@@ -455,8 +479,9 @@ public class AdminController {
                                 HttpSession session,
                                 RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         Position position = positionRepo.findById(positionId).orElse(null);
         if (position == null) {
@@ -513,8 +538,9 @@ public class AdminController {
     @PostMapping("/candidates/delete")
     public String deleteCandidate(@RequestParam("id") Long id, HttpSession session, RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         Candidate candidate = candidateRepo.findById(id).orElse(null);
         if (candidate != null) {
@@ -535,8 +561,9 @@ public class AdminController {
                              Model model,
                              HttpSession session) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         List<Voter> allVoters = voterRepo.findAll();
         List<Voter> voters;
@@ -592,8 +619,9 @@ public class AdminController {
                             HttpSession session,
                             RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         Voter voter = (id != null) ? voterRepo.findById(id).orElse(new Voter()) : new Voter();
 
@@ -651,8 +679,9 @@ public class AdminController {
                               HttpSession session,
                               RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         Voter voter = voterRepo.findById(id).orElse(null);
         if (voter == null) {
@@ -682,8 +711,9 @@ public class AdminController {
     @PostMapping("/voters/delete")
     public String deleteVoter(@RequestParam("id") Long id, HttpSession session, RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         Voter voter = voterRepo.findById(id).orElse(null);
         if (voter != null) {
@@ -703,8 +733,9 @@ public class AdminController {
     public String listVotes(@RequestParam(value = "org", required = false) String orgParam,
                             Model model, HttpServletRequest request, HttpSession session) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         String tempOrg = "ALL";
         if (!isSuper) {
@@ -761,8 +792,9 @@ public class AdminController {
                              HttpSession session,
                              RedirectAttributes redirectAttrs) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         String targetOrg = isSuper ? (orgParam != null && !orgParam.isBlank() ? orgParam.trim() : "ALL") : adminOrg;
 
@@ -825,8 +857,9 @@ public class AdminController {
     public String viewBlockchain(@RequestParam(value = "org", required = false) String orgParam,
                                  Model model, HttpSession session) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         String tempOrg = "ALL";
         if (!isSuper) {
@@ -873,8 +906,9 @@ public class AdminController {
     public String viewAuditLogs(@RequestParam(value = "org", required = false) String orgParam,
                                 Model model, HttpSession session) {
         Admin admin = getLoggedInAdmin(session);
-        boolean isSuper = admin == null || admin.isSuperAdmin();
-        String adminOrg = (admin != null && admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        if (admin == null) return "redirect:/admin/login";
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
 
         String tempOrg = "ALL";
         if (!isSuper) {
@@ -1015,7 +1049,11 @@ public class AdminController {
     }
 
     @PostMapping("/election/status")
-    public String updateElectionStatus(@RequestParam("status") String status, RedirectAttributes redirectAttrs) {
+    public String updateElectionStatus(@RequestParam("status") String status, HttpSession session, RedirectAttributes redirectAttrs) {
+        Admin currentAdmin = getLoggedInAdmin(session);
+        if (currentAdmin == null || !currentAdmin.isSuperAdmin()) {
+            return "redirect:/admin/login";
+        }
         ElectionSetting s = getElectionSetting();
         s.setStatus(status.toUpperCase());
         electionRepo.save(s);
@@ -1106,9 +1144,9 @@ public class AdminController {
                                          HttpSession session,
                                          RedirectAttributes redirectAttrs) {
         Admin currentAdmin = getLoggedInAdmin(session);
-        if (currentAdmin != null && !currentAdmin.isSuperAdmin()) {
+        if (currentAdmin == null || !currentAdmin.isSuperAdmin()) {
             redirectAttrs.addFlashAttribute("error", "Access Denied: Only Platform Super Administrators can update global election configurations.");
-            return "redirect:/admin/dashboard";
+            return "redirect:/admin/login";
         }
 
         ElectionSetting s = getElectionSetting();
@@ -1134,9 +1172,9 @@ public class AdminController {
                               HttpSession session,
                               RedirectAttributes redirectAttrs) {
         Admin currentAdmin = getLoggedInAdmin(session);
-        if (currentAdmin != null && !currentAdmin.isSuperAdmin()) {
+        if (currentAdmin == null || !currentAdmin.isSuperAdmin()) {
             redirectAttrs.addFlashAttribute("error", "Access Denied: Only Platform Super Administrators can apply global election presets.");
-            return "redirect:/admin/dashboard";
+            return "redirect:/admin/login";
         }
 
         ElectionSetting s = getElectionSetting();

@@ -91,14 +91,20 @@
                     </div>
 
                     <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
-                        <a href="/admin/dashboard" class="btn btn-emerald d-inline-flex align-items-center gap-2">
-                            <i class="fa-solid fa-gauge"></i> Go to Dashboard
+                        <a th:if="${session.voterId != null}" href="/ballot" class="btn btn-emerald d-inline-flex align-items-center gap-2">
+                            <i class="fa-solid fa-check-to-slot"></i> Return to Ballot
                         </a>
-                        <a href="/admin/login" class="btn btn-outline-secondary rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                        <a th:if="${session.adminId != null}" href="/admin/dashboard" class="btn btn-emerald d-inline-flex align-items-center gap-2">
+                            <i class="fa-solid fa-gauge"></i> Admin Dashboard
+                        </a>
+                        <a th:if="${session.voterId == null and session.adminId == null}" href="/" class="btn btn-emerald d-inline-flex align-items-center gap-2">
+                            <i class="fa-solid fa-house"></i> Home
+                        </a>
+                        <a th:if="${session.voterId != null}" href="/" class="btn btn-light border rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                            <i class="fa-solid fa-house"></i> Voter Home
+                        </a>
+                        <a th:if="${session.adminId == null and session.voterId == null}" href="/admin/login" class="btn btn-outline-secondary rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
                             <i class="fa-solid fa-lock"></i> Admin Login
-                        </a>
-                        <a href="/" class="btn btn-light border rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
-                            <i class="fa-solid fa-arrow-left"></i> Voter Portal
                         </a>
                     </div>
 
