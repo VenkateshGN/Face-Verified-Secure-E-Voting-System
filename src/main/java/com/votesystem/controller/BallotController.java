@@ -5,6 +5,7 @@ import com.votesystem.repository.*;
 import com.votesystem.service.BlockchainService;
 import com.votesystem.service.CryptoService;
 import com.votesystem.service.QrCodeService;
+import com.votesystem.util.OrgMatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -89,7 +90,8 @@ public class BallotController {
             List<Candidate> filteredCandidates = p.getCandidates().stream()
                     .filter(c -> {
                         if (!voterOrg.isBlank() && !"ALL".equalsIgnoreCase(voterOrg)) {
-                            return c.getOrganization() != null && c.getOrganization().trim().equalsIgnoreCase(voterOrg);
+                            return OrgMatcher.matches(voterOrg, c.getOrganization())
+                                    || OrgMatcher.matches(voterOrg, p.getTargetOrganization());
                         }
                         return true;
                     })
@@ -202,7 +204,8 @@ public class BallotController {
                         if (candidate.getOrganization() != null && !candidate.getOrganization().isBlank()
                                 && voter.getOrganization() != null && !voter.getOrganization().isBlank()
                                 && !"ALL".equalsIgnoreCase(voter.getOrganization())) {
-                            if (!candidate.getOrganization().trim().equalsIgnoreCase(voter.getOrganization().trim())) {
+                            if (!OrgMatcher.matches(candidate.getOrganization(), voter.getOrganization())
+                                    && !OrgMatcher.matches(pos.getTargetOrganization(), voter.getOrganization())) {
                                 auditRepo.save(new AuditLog(
                                         "Unauthorized Candidate Vote Blocked",
                                         "SECURITY_VIOLATION",
@@ -352,7 +355,7 @@ public class BallotController {
         // Positions from other organizations, schools, or public elections MUST NOT be displayed or voted on!
         if (!voterOrg.isBlank() && !"ALL".equalsIgnoreCase(voterOrg) && !"PUBLIC".equalsIgnoreCase(voterOrg)) {
             // Corporate / School / Organization voter: MUST strictly match the position's target organization
-            if (!targetOrg.equalsIgnoreCase(voterOrg)) {
+            if (!OrgMatcher.matches(targetOrg, voterOrg)) {
                 return false; // Strictly isolate: do not display or allow other positions!
             }
         } else {

@@ -200,9 +200,19 @@ public class DataInitializer implements CommandLineRunner {
 
         }
 
-        // 8. Migrate and partition all positions strictly by target organization
+        // 8. Migrate and partition seed positions strictly by target organization
         for (Position p : positionRepo.findAll()) {
             String d = p.getDescription() != null ? p.getDescription().toLowerCase() : "";
+            // Protect custom user-created positions (id > 9 or non-default positions)
+            if (p.getId() != null && p.getId() > 9) {
+                if ((d.contains("inovation") || d.contains("invation") || d.contains("innovation"))
+                        && (p.getTargetOrganization() == null || p.getTargetOrganization().isBlank() || "CRCE College".equalsIgnoreCase(p.getTargetOrganization()))) {
+                    p.setTargetOrganization("Invation Hub");
+                    p.setElectorateScope("OFFICE_ORGANIZATION");
+                    positionRepo.save(p);
+                }
+                continue; // Never overwrite custom user positions
+            }
             if (d.contains("cultural event organizer") || d.contains("employee welfare") || d.contains("sports coordinator") || d.contains("infosys")) {
                 p.setTargetOrganization("Infosys");
                 p.setElectorateScope("OFFICE_ORGANIZATION");
@@ -218,14 +228,12 @@ public class DataInitializer implements CommandLineRunner {
             positionRepo.save(p);
         }
 
-        // 9. Migrate candidate organization to strictly match their position target organization
+        // 9. Harmonize candidate organizations with their position target organization
         for (Candidate c : candidateRepo.findAll()) {
-            if (c.getPosition() != null && c.getPosition().getTargetOrganization() != null) {
+            if (c.getPosition() != null && c.getPosition().getTargetOrganization() != null && !c.getPosition().getTargetOrganization().isBlank()) {
                 c.setOrganization(c.getPosition().getTargetOrganization());
-            } else if (c.getOrganization() == null || c.getOrganization().isBlank()) {
-                c.setOrganization("Infosys");
+                candidateRepo.save(c);
             }
-            candidateRepo.save(c);
         }
 
         log.info("System initialization complete.");

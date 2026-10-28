@@ -125,21 +125,23 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Contesting Position / Role</label>
-                            <select name="positionId" class="form-select" required>
+                            <select name="positionId" id="addCandPosId" class="form-select" required onchange="onAddCandidatePositionChange(this)">
                                 <option value="" disabled selected>Select Position / Role...</option>
-                                <option th:each="pos : ${positions}" th:value="${pos.id}" th:text="${pos.description} + ' — [' + ${pos.electorateScopeDisplayName} + ']'">MLA</option>
+                                <option th:each="pos : ${positions}" th:value="${pos.id}" th:data-target-org="${pos.targetOrganization}" th:text="${pos.description} + ' — [' + ${pos.electorateScopeDisplayName} + '] (' + ${pos.targetOrganization} + ')'">MLA</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Company / Organization</label>
-                            <input type="text" name="organization" class="form-control" list="candOrgOptions" placeholder="e.g. Infosys, Wipro, TCS" value="Infosys" required>
+                            <input type="text" name="organization" id="addCandOrg" class="form-control" list="candOrgOptions" placeholder="e.g. Invation Hub, Infosys, CRCE College" th:value="${!isSuperAdmin ? adminOrg : ''}" required>
                             <datalist id="candOrgOptions">
+                                <option value="Invation Hub">Invation Hub</option>
+                                <option value="Inovation Hub">Inovation Hub</option>
                                 <option value="Infosys">Infosys</option>
+                                <option value="CRCE College">CRCE College</option>
                                 <option value="Wipro">Wipro</option>
                                 <option value="TCS">TCS</option>
-                                <option value="CRCE College">CRCE College</option>
                             </datalist>
-                            <div class="form-text small">Ensures this candidate is only associated with their relevant company.</div>
+                            <div class="form-text small">Automatically synchronizes with the selected role's target organization.</div>
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
@@ -186,9 +188,9 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label small fw-bold">Contesting Position / Role</label>
-                            <select name="positionId" id="editCandPosId" class="form-select" required>
+                            <select name="positionId" id="editCandPosId" class="form-select" required onchange="onEditCandidatePositionChange(this)">
                                 <option value="" disabled>Select Position / Role...</option>
-                                <option th:each="pos : ${positions}" th:value="${pos.id}" th:text="${pos.description} + ' — [' + ${pos.electorateScopeDisplayName} + ']'">MLA</option>
+                                <option th:each="pos : ${positions}" th:value="${pos.id}" th:data-target-org="${pos.targetOrganization}" th:text="${pos.description} + ' — [' + ${pos.electorateScopeDisplayName} + '] (' + ${pos.targetOrganization} + ')'">MLA</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -267,13 +269,35 @@
             });
         }
 
+        function onAddCandidatePositionChange(selectElem) {
+            const selectedOption = selectElem.options[selectElem.selectedIndex];
+            if (selectedOption) {
+                const targetOrg = selectedOption.getAttribute('data-target-org');
+                if (targetOrg && targetOrg !== 'ALL') {
+                    const orgInput = document.getElementById('addCandOrg');
+                    if (orgInput) orgInput.value = targetOrg;
+                }
+            }
+        }
+
+        function onEditCandidatePositionChange(selectElem) {
+            const selectedOption = selectElem.options[selectElem.selectedIndex];
+            if (selectedOption) {
+                const targetOrg = selectedOption.getAttribute('data-target-org');
+                if (targetOrg && targetOrg !== 'ALL') {
+                    const orgInput = document.getElementById('editCandOrg');
+                    if (orgInput) orgInput.value = targetOrg;
+                }
+            }
+        }
+
         function openEditCandidateModal(id, posId, first, last, platform, org) {
             document.getElementById('editCandId').value = id;
             document.getElementById('editCandPosId').value = posId;
             document.getElementById('editCandFirst').value = first;
             document.getElementById('editCandLast').value = last;
             document.getElementById('editCandPlatform').value = platform || '';
-            document.getElementById('editCandOrg').value = org || 'Infosys';
+            document.getElementById('editCandOrg').value = org || '';
             new bootstrap.Modal(document.getElementById('editCandidateModal')).show();
         }
     </script>

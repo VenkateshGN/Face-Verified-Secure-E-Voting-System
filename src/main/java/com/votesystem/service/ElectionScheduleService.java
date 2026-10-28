@@ -4,6 +4,7 @@ import com.votesystem.model.Admin;
 import com.votesystem.model.ElectionSetting;
 import com.votesystem.repository.AdminRepository;
 import com.votesystem.repository.ElectionSettingRepository;
+import com.votesystem.util.OrgMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,9 @@ public class ElectionScheduleService {
 
     public ScheduleInfo getSchedule(String organization) {
         if (organization != null && !organization.isBlank() && !"ALL".equalsIgnoreCase(organization.trim())) {
-            List<Admin> admins = adminRepo.findByOrganization(organization.trim());
+            List<Admin> admins = adminRepo.findAll().stream()
+                    .filter(a -> OrgMatcher.matches(organization, a.getOrganization()))
+                    .toList();
             for (Admin admin : admins) {
                 if (Boolean.TRUE.equals(admin.getTimeLimitEnabled())) {
                     return new ScheduleInfo(

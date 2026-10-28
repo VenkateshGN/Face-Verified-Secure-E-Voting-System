@@ -7,6 +7,7 @@ import com.votesystem.service.FileStorageService;
 import com.votesystem.service.QrCodeService;
 import com.votesystem.service.VoteIntegrityService;
 import com.votesystem.service.VoteIntegrityService.VoteAuditReport;
+import com.votesystem.util.OrgMatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -244,17 +245,18 @@ public class AdminController {
 
         List<Position> allPositions = positionRepo.findAllByOrderByPriorityAsc();
         List<Position> positions = (!isViewingSpecificOrg) ? allPositions : allPositions.stream()
-                .filter(p -> effectiveOrg.equalsIgnoreCase(p.getTargetOrganization()))
+                .filter(p -> OrgMatcher.matches(effectiveOrg, p.getTargetOrganization()))
                 .toList();
 
         List<Candidate> allCandidates = candidateRepo.findAll();
         List<Candidate> candidates = (!isViewingSpecificOrg) ? allCandidates : allCandidates.stream()
-                .filter(c -> effectiveOrg.equalsIgnoreCase(c.getOrganization()))
+                .filter(c -> OrgMatcher.matches(effectiveOrg, c.getOrganization())
+                        || (c.getPosition() != null && OrgMatcher.matches(effectiveOrg, c.getPosition().getTargetOrganization())))
                 .toList();
 
         List<Voter> allVoters = voterRepo.findAll();
         List<Voter> voters = (!isViewingSpecificOrg) ? allVoters : allVoters.stream()
-                .filter(v -> effectiveOrg.equalsIgnoreCase(v.getOrganization()))
+                .filter(v -> OrgMatcher.matches(effectiveOrg, v.getOrganization()))
                 .toList();
 
         long numPositions = positions.size();
@@ -266,7 +268,10 @@ public class AdminController {
         Map<Long, List<CandidateTally>> talliesByPosition = new HashMap<>();
         for (Position pos : positions) {
             List<Candidate> posCandidates = candidateRepo.findByPositionIdOrderByIdAsc(pos.getId()).stream()
-                    .filter(c -> !isViewingSpecificOrg || effectiveOrg.equalsIgnoreCase(c.getOrganization()))
+                    .filter(c -> !isViewingSpecificOrg 
+                            || OrgMatcher.matches(effectiveOrg, c.getOrganization())
+                            || OrgMatcher.matches(pos.getTargetOrganization(), c.getOrganization())
+                            || (c.getPosition() != null && OrgMatcher.matches(effectiveOrg, c.getPosition().getTargetOrganization())))
                     .toList();
             List<CandidateTally> tallies = new ArrayList<>();
             for (Candidate c : posCandidates) {
@@ -341,7 +346,7 @@ public class AdminController {
 
         List<Position> allPositions = positionRepo.findAllByOrderByPriorityAsc();
         List<Position> positions = isSuper ? allPositions : allPositions.stream()
-                .filter(p -> adminOrg.equalsIgnoreCase(p.getTargetOrganization()))
+                .filter(p -> OrgMatcher.matches(adminOrg, p.getTargetOrganization()))
                 .toList();
 
         model.addAttribute("positions", positions);
@@ -369,7 +374,7 @@ public class AdminController {
         Position position = (id != null) ? positionRepo.findById(id).orElse(new Position()) : new Position();
 
         if (id != null && !isSuper) {
-            if (!adminOrg.equalsIgnoreCase(position.getTargetOrganization())) {
+            if (!OrgMatcher.matches(adminOrg, position.getTargetOrganization())) {
                 redirectAttrs.addFlashAttribute("error", "Access Denied: You cannot modify positions belonging to other organizations.");
                 return "redirect:/admin/positions";
             }
@@ -400,7 +405,7 @@ public class AdminController {
 
         Position position = positionRepo.findById(id).orElse(null);
         if (position != null) {
-            if (!isSuper && !adminOrg.equalsIgnoreCase(position.getTargetOrganization())) {
+            if (!isSuper && !OrgMatcher.matches(adminOrg, position.getTargetOrganization())) {
                 redirectAttrs.addFlashAttribute("error", "Access Denied: You cannot delete positions from other organizations.");
                 return "redirect:/admin/positions";
             }
@@ -420,12 +425,13 @@ public class AdminController {
 
         List<Candidate> allCandidates = candidateRepo.findAll();
         List<Candidate> candidates = isSuper ? allCandidates : allCandidates.stream()
-                .filter(c -> adminOrg.equalsIgnoreCase(c.getOrganization()))
+                .filter(c -> OrgMatcher.matches(adminOrg, c.getOrganization())
+                        || (c.getPosition() != null && OrgMatcher.matches(adminOrg, c.getPosition().getTargetOrganization())))
                 .toList();
 
         List<Position> allPositions = positionRepo.findAllByOrderByPriorityAsc();
         List<Position> positions = isSuper ? allPositions : allPositions.stream()
-                .filter(p -> adminOrg.equalsIgnoreCase(p.getTargetOrganization()))
+                .filter(p -> OrgMatcher.matches(adminOrg, p.getTargetOrganization()))
                 .toList();
 
         model.addAttribute("candidates", candidates);
@@ -458,7 +464,7 @@ public class AdminController {
             return "redirect:/admin/candidates";
         }
 
-        if (!isSuper && !adminOrg.equalsIgnoreCase(position.getTargetOrganization())) {
+        if (!isSuper && !OrgMatcher.matches(adminOrg, position.getTargetOrganization())) {
             redirectAttrs.addFlashAttribute("error", "Access Denied: You cannot assign candidates to positions outside your organization.");
             return "redirect:/admin/candidates";
         }
@@ -466,7 +472,7 @@ public class AdminController {
         Candidate candidate = (id != null) ? candidateRepo.findById(id).orElse(new Candidate()) : new Candidate();
 
         if (id != null && !isSuper) {
-            if (!adminOrg.equalsIgnoreCase(candidate.getOrganization())) {
+            if (!OrgMatcher.matches(adminOrg, candidate.getOrganization())) {
                 redirectAttrs.addFlashAttribute("error", "Access Denied: You cannot modify candidates from other organizations.");
                 return "redirect:/admin/candidates";
             }
@@ -480,7 +486,13 @@ public class AdminController {
         if (!isSuper) {
             candidate.setOrganization(adminOrg);
         } else {
-            candidate.setOrganization(organization != null && !organization.isBlank() ? organization.trim() : "Infosys");
+            if (organization != null && !organization.isBlank() && !"Infosys".equalsIgnoreCase(organization)) {
+                candidate.setOrganization(organization.trim());
+            } else if (position.getTargetOrganization() != null && !position.getTargetOrganization().isBlank() && !"ALL".equalsIgnoreCase(position.getTargetOrganization())) {
+                candidate.setOrganization(position.getTargetOrganization().trim());
+            } else {
+                candidate.setOrganization(organization != null && !organization.isBlank() ? organization.trim() : "Infosys");
+            }
         }
 
         if (photoFile != null && !photoFile.isEmpty()) {
@@ -506,7 +518,7 @@ public class AdminController {
 
         Candidate candidate = candidateRepo.findById(id).orElse(null);
         if (candidate != null) {
-            if (!isSuper && !adminOrg.equalsIgnoreCase(candidate.getOrganization())) {
+            if (!isSuper && !OrgMatcher.matches(adminOrg, candidate.getOrganization())) {
                 redirectAttrs.addFlashAttribute("error", "Access Denied: You cannot delete candidates from other organizations.");
                 return "redirect:/admin/candidates";
             }
@@ -533,14 +545,14 @@ public class AdminController {
         if (!isSuper) {
             // Organizer MUST ONLY see their own organization's voters! Other organize voters are excluded.
             voters = allVoters.stream()
-                    .filter(v -> adminOrg.equalsIgnoreCase(v.getOrganization()))
+                    .filter(v -> OrgMatcher.matches(adminOrg, v.getOrganization()))
                     .toList();
             activeFilter = adminOrg;
         } else {
             // Super Admin can filter by organization (e.g., ?org=Infosys to view Infosys voters only)
             if (orgFilter != null && !orgFilter.isBlank() && !"ALL".equalsIgnoreCase(orgFilter.trim())) {
                 voters = allVoters.stream()
-                        .filter(v -> orgFilter.trim().equalsIgnoreCase(v.getOrganization()))
+                        .filter(v -> OrgMatcher.matches(orgFilter, v.getOrganization()))
                         .toList();
                 activeFilter = orgFilter.trim();
             } else {

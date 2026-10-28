@@ -8,6 +8,7 @@ import com.votesystem.repository.VoteRepository;
 import com.votesystem.service.BlockchainService;
 import com.votesystem.service.VoteIntegrityService;
 import com.votesystem.service.VoteIntegrityService.VoteAuditReport;
+import com.votesystem.util.OrgMatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -63,7 +64,7 @@ public class PublicAuditController {
         } else {
             String filter = activeOrg;
             List<VoteIntegrityService.VoteAuditItem> filteredItems = fullReport.getItems().stream()
-                    .filter(item -> filter.equalsIgnoreCase(item.getVote().getOrganization()))
+                    .filter(item -> OrgMatcher.matches(filter, item.getVote().getOrganization()))
                     .toList();
             int total = filteredItems.size();
             int valid = (int) filteredItems.stream().filter(VoteIntegrityService.VoteAuditItem::isValid).count();

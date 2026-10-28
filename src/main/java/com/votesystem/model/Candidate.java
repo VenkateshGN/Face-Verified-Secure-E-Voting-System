@@ -30,7 +30,7 @@ public class Candidate {
     private String symbol;
 
     @Column(name = "organization", length = 100)
-    private String organization = "Infosys";
+    private String organization;
 
     public Candidate() {}
 
@@ -112,11 +112,17 @@ public class Candidate {
     }
 
     public String getOrganization() {
-        return organization != null && !organization.isBlank() ? organization : "Infosys";
+        if (organization != null && !organization.isBlank()) {
+            return organization;
+        }
+        if (position != null && position.getTargetOrganization() != null && !position.getTargetOrganization().isBlank() && !"ALL".equalsIgnoreCase(position.getTargetOrganization())) {
+            return position.getTargetOrganization();
+        }
+        return "Infosys";
     }
 
     public void setOrganization(String organization) {
-        this.organization = organization != null && !organization.isBlank() ? organization : "Infosys";
+        this.organization = (organization != null && !organization.isBlank()) ? organization.trim() : null;
     }
 
     public String getOrganizationBadgeClass() {

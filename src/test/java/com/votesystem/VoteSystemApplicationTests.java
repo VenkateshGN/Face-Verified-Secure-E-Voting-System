@@ -475,4 +475,32 @@ class VoteSystemApplicationTests {
         com.votesystem.service.ElectionScheduleService.ScheduleInfo otherSchedule = scheduleService.getSchedule(otherOrg);
         assertNotEquals("Infosys", otherSchedule.getScopeName(), "Other org should not have Infosys scope name");
     }
+
+    @Test
+    void testOrgMatcherFuzzyMatchingAndCandidateInheritance() {
+        // 1. Fuzzy matching
+        assertTrue(com.votesystem.util.OrgMatcher.matches("Inovation Hub", "Invation Hub"), "Inovation Hub and Invation Hub must match");
+        assertTrue(com.votesystem.util.OrgMatcher.matches("Inovation Hub", "Innovation Hub"), "Inovation Hub and Innovation Hub must match");
+        assertTrue(com.votesystem.util.OrgMatcher.matches("Invation Hub", "Inovation Hub"), "Invation Hub and Inovation Hub must match");
+        assertFalse(com.votesystem.util.OrgMatcher.matches("Infosys", "Wipro"), "Infosys and Wipro must not match");
+        assertFalse(com.votesystem.util.OrgMatcher.matches("CRCE College", "Infosys"), "CRCE College and Infosys must not match");
+
+        // 2. Candidate organization inheritance from Position
+        Position pos = new Position("Inovation Hub Leader", 1, 1, "OFFICE_ORGANIZATION", "ALL", "Invation Hub");
+        pos = positionRepo.save(pos);
+
+        Candidate cand = new Candidate();
+        cand.setPosition(pos);
+        cand.setFirstname("Venkatesha");
+        cand.setLastname("GN");
+        assertEquals("Invation Hub", cand.getOrganization(), "Candidate without explicit org must inherit from position targetOrganization");
+
+        // 3. Voter with 'Inovation Hub' or 'Invation Hub' should see the position
+        Voter v = new Voter("INV_" + System.currentTimeMillis(), "password", "Rolex", "Star", "photo.jpg", "rolex@test.com");
+        v.setVoterCategory("EMPLOYEE");
+        v.setOrganization("Inovation Hub");
+        voterRepo.save(v);
+
+        assertTrue(ballotController.isPositionEligibleForVoter(pos, v), "Voter with Inovation Hub must be eligible for Invation Hub position");
+    }
 }
