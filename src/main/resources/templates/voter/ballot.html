@@ -105,10 +105,18 @@
             <div class="mb-3">
                 <i class="fa-solid fa-building-circle-check text-success text-opacity-50" style="font-size: 3.5rem;"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-2">No Active Ballot for Your Organization</h4>
-            <p class="text-muted small mb-3">There are currently no active voting positions scheduled for <strong th:text="${voter.organizationDisplayName}">Your Organization</strong>.</p>
-            <div class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">
-                <i class="fa-solid fa-shield-halved text-success me-1"></i> Multi-Tenant Isolation Active &bull; External Elections Protected
+            <h4 class="fw-bold text-dark mb-2">No Election Offices Configured for Your Organization</h4>
+            <p class="text-muted small mb-3">
+                There are currently no election positions or candidates registered under <strong th:text="${voter.organizationDisplayName}">Your Organization</strong>.
+                <br>Your election schedule and voting window are active, but an administrator must add positions and candidates for <strong><span th:text="${voter.organizationDisplayName}">Invation Hub</span></strong> in the Admin Portal.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <div class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i> Multi-Tenant Isolation Active &bull; External Elections Protected
+                </div>
+                <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill small" th:if="${timeLimitActive}">
+                    <i class="fa-solid fa-stopwatch me-1"></i> Election Window Active (Time Limit Running)
+                </div>
             </div>
         </div>
 
