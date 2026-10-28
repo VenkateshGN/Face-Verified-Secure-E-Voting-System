@@ -1,5 +1,6 @@
 package com.votesystem;
 
+import com.votesystem.model.Admin;
 import com.votesystem.model.Candidate;
 import com.votesystem.model.Position;
 import com.votesystem.model.Vote;
@@ -435,5 +436,43 @@ class VoteSystemApplicationTests {
 
         // Clean up
         voterRepo.delete(voter);
+    }
+
+    @Test
+    void testElectionScheduleControllerAndPresetValidation() {
+        Admin admin = adminRepo.findByUsername("Venkatesh").orElseGet(() -> {
+            Admin a = new Admin("Venkatesh", passwordEncoder.encode("password"), "Venkatesh", "Admin", "admin.jpg");
+            return adminRepo.save(a);
+        });
+
+        org.springframework.mock.web.MockHttpSession session = new org.springframework.mock.web.MockHttpSession();
+        session.setAttribute("adminId", admin.getId());
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap redirectAttrs = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+
+        // 1. Validation test: End time before start time
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        String startStr = now.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+        String invalidEndStr = now.minusHours(2).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+
+        String res1 = adminController.updateElectionSchedule(startStr, invalidEndStr, true, null, "ALL", session, request, redirectAttrs);
+        assertEquals("redirect:/admin/dashboard", res1);
+        assertTrue(redirectAttrs.getFlashAttributes().containsKey("error"), "Should trigger validation error for end before start");
+
+        // 2. Preset test: 4 Hours preset
+        redirectAttrs = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+        String res2 = adminController.updateElectionSchedule(null, null, true, 4, "Infosys", session, request, redirectAttrs);
+        assertEquals("redirect:/admin/dashboard", res2);
+        assertTrue(redirectAttrs.getFlashAttributes().containsKey("success"));
+
+        com.votesystem.service.ElectionScheduleService.ScheduleInfo infySchedule = scheduleService.getSchedule("Infosys");
+        assertTrue(infySchedule.isTimeLimitActive(), "Infosys time limit should be active");
+        assertTrue(infySchedule.isVotingOpen(), "Infosys voting should be open");
+        assertTrue(infySchedule.getRemainingSeconds() > 14000, "Remaining seconds should be around 4 hours (14400s)");
+
+        // 3. Multi-tenant independence: Another organization should NOT inherit Infosys schedule unless configured
+        String otherOrg = "OtherOrg_" + System.currentTimeMillis();
+        com.votesystem.service.ElectionScheduleService.ScheduleInfo otherSchedule = scheduleService.getSchedule(otherOrg);
+        assertNotEquals("Infosys", otherSchedule.getScopeName(), "Other org should not have Infosys scope name");
     }
 }
