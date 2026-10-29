@@ -28,7 +28,7 @@ public class ElectionScheduleService {
                     .filter(a -> OrgMatcher.matches(organization, a.getOrganization()))
                     .toList();
             for (Admin admin : admins) {
-                if (Boolean.TRUE.equals(admin.getTimeLimitEnabled())) {
+                if (Boolean.TRUE.equals(admin.getTimeLimitEnabled()) || admin.getElectionEndTime() != null) {
                     return new ScheduleInfo(
                             admin.isTimeLimitActive(),
                             admin.isNotStartedYet(),
@@ -42,7 +42,7 @@ public class ElectionScheduleService {
                             admin.getScheduleStatus(),
                             admin.getScheduleStatusBadgeClass(),
                             admin.getScheduleStatusLabel(),
-                            true,
+                            Boolean.TRUE.equals(admin.getTimeLimitEnabled()),
                             organization.trim()
                     );
                 }
@@ -98,7 +98,9 @@ public class ElectionScheduleService {
             setting.setTimeLimitEnabled(enabled);
             electionRepo.save(setting);
         } else {
-            List<Admin> admins = adminRepo.findByOrganization(organization.trim());
+            List<Admin> admins = adminRepo.findAll().stream()
+                    .filter(a -> OrgMatcher.matches(organization, a.getOrganization()))
+                    .toList();
             if (admins.isEmpty()) {
                 Admin newAdmin = new Admin(
                         organization.trim().toLowerCase().replaceAll("[^a-zA-Z0-9_]", "_") + "_admin",

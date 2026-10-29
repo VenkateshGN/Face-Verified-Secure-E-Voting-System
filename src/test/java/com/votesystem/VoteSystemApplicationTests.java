@@ -514,4 +514,53 @@ class VoteSystemApplicationTests {
         String view = adminController.dashboard(null, model, request, session);
         assertEquals("redirect:/admin/login", view, "Unauthenticated user must be redirected to /admin/login instead of seeing Super Admin dashboard");
     }
+
+    @Test
+    void testElectionClosingFeatureForSpecifiedTime() {
+        String testOrg = "TestScheduleOrg_" + System.currentTimeMillis();
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+        // 1. Active voting window: started 10 mins ago, closes in 10 mins
+        java.time.LocalDateTime start = now.minusMinutes(10);
+        java.time.LocalDateTime end = now.plusMinutes(10);
+        scheduleService.updateScheduleForOrganization(testOrg, start, end, true);
+
+        com.votesystem.service.ElectionScheduleService.ScheduleInfo activeSchedule = scheduleService.getSchedule(testOrg);
+        assertTrue(activeSchedule.isTimeLimitActive(), "Time limit should be active");
+        assertFalse(activeSchedule.isNotStarted(), "Polls should be started");
+        assertFalse(activeSchedule.isExpired(), "Polls should not be expired yet");
+        assertTrue(activeSchedule.isVotingOpen(), "Voting should be open");
+        assertTrue(activeSchedule.getRemainingSeconds() > 0, "Remaining seconds should be positive");
+        assertEquals("LIVE", activeSchedule.getScheduleStatus());
+
+        // 2. Expired voting window: started 30 mins ago, closed 5 mins ago
+        java.time.LocalDateTime expiredEnd = now.minusMinutes(5);
+        scheduleService.updateScheduleForOrganization(testOrg, start, expiredEnd, true);
+
+        com.votesystem.service.ElectionScheduleService.ScheduleInfo expiredSchedule = scheduleService.getSchedule(testOrg);
+        assertTrue(expiredSchedule.isTimeLimitActive(), "Time limit should be active");
+        assertTrue(expiredSchedule.isExpired(), "Polls should be expired");
+        assertFalse(expiredSchedule.isVotingOpen(), "Voting should NOT be open after specified closing time");
+        assertEquals(0, expiredSchedule.getRemainingSeconds(), "Remaining seconds should be 0 when expired");
+        assertEquals("EXPIRED", expiredSchedule.getScheduleStatus());
+
+        // 3. Future scheduled election: starts in 30 mins, ends in 60 mins
+        java.time.LocalDateTime futureStart = now.plusMinutes(30);
+        java.time.LocalDateTime futureEnd = now.plusMinutes(60);
+        scheduleService.updateScheduleForOrganization(testOrg, futureStart, futureEnd, true);
+
+        com.votesystem.service.ElectionScheduleService.ScheduleInfo futureSchedule = scheduleService.getSchedule(testOrg);
+        assertTrue(futureSchedule.isTimeLimitActive());
+        assertTrue(futureSchedule.isNotStarted(), "Polls should not be started yet");
+        assertFalse(futureSchedule.isExpired());
+        assertFalse(futureSchedule.isVotingOpen(), "Voting should NOT be open before start time");
+        assertEquals("NOT_STARTED", futureSchedule.getScheduleStatus());
+
+        // 4. Disable time limit: open indefinitely
+        scheduleService.updateScheduleForOrganization(testOrg, null, null, false);
+        com.votesystem.service.ElectionScheduleService.ScheduleInfo unlimitedSchedule = scheduleService.getSchedule(testOrg);
+        assertFalse(unlimitedSchedule.isTimeLimitActive(), "Time limit should be inactive");
+        assertFalse(unlimitedSchedule.isExpired());
+        assertTrue(unlimitedSchedule.isVotingOpen(), "Voting should be open when time limit is disabled");
+    }
 }

@@ -750,10 +750,11 @@
                         <div class="mb-2">
                             <label class="form-label small fw-bold text-muted d-block mb-1">QUICK DURATION PRESETS (FROM NOW):</label>
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(1)">+1 Hour</button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(4)">+4 Hours</button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(24)">+24 Hours (1 Day)</button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetHours(72)">+3 Days</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="setPresetMinutes(5)">+5 Mins (Quick Test)</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetMinutes(15)">+15 Mins</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetMinutes(60)">+1 Hour</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetMinutes(240)">+4 Hours</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="setPresetMinutes(1440)">+24 Hours</button>
                                 <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="clearScheduleInputs()">Disable Limit</button>
                             </div>
                         </div>
@@ -857,9 +858,9 @@
             }
         }
 
-        function setPresetHours(hours) {
+        function setPresetMinutes(minutes) {
             const now = new Date();
-            const future = new Date(now.getTime() + hours * 60 * 60 * 1000);
+            const future = new Date(now.getTime() + minutes * 60 * 1000);
             
             const formatForInput = (d) => {
                 const pad = (n) => String(n).padStart(2, '0');
@@ -869,6 +870,10 @@
             document.getElementById('inputStartTime').value = formatForInput(now);
             document.getElementById('inputEndTime').value = formatForInput(future);
             document.getElementById('scheduleSwitch').checked = true;
+        }
+
+        function setPresetHours(hours) {
+            setPresetMinutes(hours * 60);
         }
 
         function clearScheduleInputs() {

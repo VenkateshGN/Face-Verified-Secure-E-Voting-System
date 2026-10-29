@@ -1100,6 +1100,11 @@ public class AdminController {
             }
         }
 
+        if (enabled && end == null) {
+            redirectAttrs.addFlashAttribute("error", "Please specify a Polls Close (Deadline End Time) when enabling the election time limit.");
+            return "redirect:/admin/dashboard";
+        }
+
         if (enabled && end != null && start != null && end.isBefore(start)) {
             redirectAttrs.addFlashAttribute("error", "End time must be after the start time.");
             return "redirect:/admin/dashboard";
