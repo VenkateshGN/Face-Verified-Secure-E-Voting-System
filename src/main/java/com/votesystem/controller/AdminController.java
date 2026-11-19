@@ -17,6 +17,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import com.votesystem.dto.AiElectionPlan;
+import com.votesystem.dto.AiExecutionResult;
+import com.votesystem.service.GeminiAiService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -43,6 +47,7 @@ public class AdminController {
     private final FileStorageService fileStorageService;
     private final QrCodeService qrCodeService;
     private final com.votesystem.service.ElectionScheduleService scheduleService;
+    private final GeminiAiService geminiAiService;
 
     public AdminController(AdminRepository adminRepo, PositionRepository positionRepo,
                            CandidateRepository candidateRepo, VoterRepository voterRepo,
@@ -51,7 +56,8 @@ public class AdminController {
                            PasswordEncoder passwordEncoder, VoteIntegrityService integrityService,
                            BlockchainService blockchainService, FileStorageService fileStorageService,
                            QrCodeService qrCodeService,
-                           com.votesystem.service.ElectionScheduleService scheduleService) {
+                           com.votesystem.service.ElectionScheduleService scheduleService,
+                           GeminiAiService geminiAiService) {
         this.adminRepo = adminRepo;
         this.positionRepo = positionRepo;
         this.candidateRepo = candidateRepo;
@@ -66,6 +72,7 @@ public class AdminController {
         this.fileStorageService = fileStorageService;
         this.qrCodeService = qrCodeService;
         this.scheduleService = scheduleService;
+        this.geminiAiService = geminiAiService;
     }
 
     // ==================== AUTHENTICATION ====================
@@ -1493,6 +1500,82 @@ public class AdminController {
 
         redirectAttrs.addFlashAttribute("success", "Successfully removed entire election for '" + org + "'! (" + votesToDelete.size() + " votes, " + orgCandidates.size() + " candidates, " + orgPositions.size() + " positions deleted).");
         return "redirect:/admin/organizers";
+    }
+
+    // ==================== GEMINI AI COPILOT ENDPOINTS ====================
+
+    @GetMapping("/ai-assistant")
+    public String showAiAssistant(Model model, HttpSession session) {
+        Admin admin = getLoggedInAdmin(session);
+        if (admin == null) return "redirect:/admin/login";
+
+        boolean isSuper = admin.isSuperAdmin();
+        String adminOrg = (admin.getOrganization() != null) ? admin.getOrganization().trim() : "ALL";
+        ElectionSetting electionSetting = getElectionSetting();
+
+        model.addAttribute("currentAdmin", admin);
+        model.addAttribute("isSuperAdmin", isSuper);
+        model.addAttribute("adminOrg", adminOrg);
+        model.addAttribute("electionSetting", electionSetting);
+        model.addAttribute("availableOrganizations", getDistinctOrganizations());
+        model.addAttribute("recentAiLogs", auditRepo.findAll().stream()
+                .filter(l -> l.getAction() != null && l.getAction().contains("AI"))
+                .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
+                .limit(10)
+                .toList());
+        return "admin/ai-assistant";
+    }
+
+    @PostMapping("/ai/prompt")
+    @ResponseBody
+    public ResponseEntity<?> processAiPromptApi(@RequestParam("prompt") String prompt,
+                                                @RequestParam(value = "execute", defaultValue = "true") boolean execute,
+                                                HttpSession session,
+                                                HttpServletRequest request) {
+        Admin admin = getLoggedInAdmin(session);
+        if (admin == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Unauthorized session"));
+        }
+
+        try {
+            AiElectionPlan plan = geminiAiService.generatePlanFromPrompt(prompt, admin);
+            if (!execute) {
+                return ResponseEntity.ok(Map.of("success", true, "dryRun", true, "plan", plan));
+            }
+            AiExecutionResult result = geminiAiService.executePlan(plan, admin, request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Gemini AI API error: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/ai/prompt-submit")
+    public String submitAiPromptForm(@RequestParam("prompt") String prompt,
+                                     HttpSession session,
+                                     HttpServletRequest request,
+                                     RedirectAttributes redirectAttrs) {
+        Admin admin = getLoggedInAdmin(session);
+        if (admin == null) return "redirect:/admin/login";
+
+        try {
+            AiElectionPlan plan = geminiAiService.generatePlanFromPrompt(prompt, admin);
+            AiExecutionResult result = geminiAiService.executePlan(plan, admin, request);
+            if (result.isSuccess()) {
+                redirectAttrs.addFlashAttribute("success", "AI Copilot: " + result.getMessage()
+                        + " (Created: " + result.getPositionsCreated() + " positions, "
+                        + result.getCandidatesCreated() + " candidates, "
+                        + result.getVotersCreated() + " voters. Schedule: "
+                        + (result.isScheduleUpdated() ? "Active until " + result.getFormattedEndTime() : "Unchanged") + ")");
+                redirectAttrs.addFlashAttribute("aiResult", result);
+            } else {
+                redirectAttrs.addFlashAttribute("error", "AI Error: " + result.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Gemini AI form submit error: {}", e.getMessage(), e);
+            redirectAttrs.addFlashAttribute("error", "Gemini AI Failed: " + e.getMessage());
+        }
+        return "redirect:/admin/dashboard";
     }
 
     private List<String> getDistinctOrganizations() {

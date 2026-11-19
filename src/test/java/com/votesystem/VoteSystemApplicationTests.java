@@ -67,6 +67,9 @@ class VoteSystemApplicationTests {
     @Autowired
     private com.votesystem.controller.PublicAuditController publicAuditController;
 
+    @Autowired
+    private com.votesystem.service.GeminiAiService geminiAiService;
+
     @Test
     void contextLoads() {
         assertNotNull(cryptoService);
@@ -562,5 +565,70 @@ class VoteSystemApplicationTests {
         assertFalse(unlimitedSchedule.isTimeLimitActive(), "Time limit should be inactive");
         assertFalse(unlimitedSchedule.isExpired());
         assertTrue(unlimitedSchedule.isVotingOpen(), "Voting should be open when time limit is disabled");
+    }
+
+    @Test
+    void testGeminiAiPlanExecution() {
+        String testOrg = "AiTestOrg_" + System.currentTimeMillis();
+        Admin admin = new Admin("ai_admin_" + System.currentTimeMillis(), passwordEncoder.encode("pass"), "AI", "Tester", "photo.png", "SUPER_ADMIN", "ALL", "Super Admin");
+        admin = adminRepo.save(admin);
+
+        com.votesystem.dto.AiElectionPlan plan = new com.votesystem.dto.AiElectionPlan();
+        plan.setSummary("AI Generated Test Election");
+        plan.setOrganization(testOrg);
+
+        com.votesystem.dto.AiElectionPlan.SchedulePlan sched = new com.votesystem.dto.AiElectionPlan.SchedulePlan();
+        sched.setEnabled(true);
+        sched.setDurationHours(4);
+        plan.setSchedule(sched);
+
+        com.votesystem.dto.AiElectionPlan.PositionPlan pos = new com.votesystem.dto.AiElectionPlan.PositionPlan();
+        pos.setDescription("AI Lead Coordinator");
+        pos.setMaxVote(1);
+        pos.setPriority(1);
+        pos.setTargetOrganization(testOrg);
+        plan.getPositions().add(pos);
+
+        com.votesystem.dto.AiElectionPlan.CandidatePlan cand = new com.votesystem.dto.AiElectionPlan.CandidatePlan();
+        cand.setFirstname("Ada");
+        cand.setLastname("Lovelace");
+        cand.setPositionName("AI Lead Coordinator");
+        cand.setPlatform("Innovation and automation");
+        cand.setOrganization(testOrg);
+        plan.getCandidates().add(cand);
+
+        com.votesystem.dto.AiElectionPlan.VoterPlan voter = new com.votesystem.dto.AiElectionPlan.VoterPlan();
+        voter.setFirstname("Alan");
+        voter.setLastname("Turing");
+        voter.setVoterCategory("EMPLOYEE");
+        voter.setDepartment("Computer Science");
+        voter.setOrganization(testOrg);
+        voter.setGenerateCount(2);
+        plan.getVoters().add(voter);
+
+        com.votesystem.dto.AiExecutionResult result = geminiAiService.executePlan(plan, admin, null);
+
+        assertTrue(result.isSuccess(), "Execution should succeed");
+        assertTrue(result.isScheduleUpdated(), "Schedule should be updated");
+        assertEquals(1, result.getPositionsCreated(), "1 position should be created");
+        assertEquals(1, result.getCandidatesCreated(), "1 candidate should be created");
+        assertEquals(2, result.getVotersCreated(), "2 voters should be created");
+        assertFalse(result.getCreatedVoters().isEmpty(), "Voters list should not be empty");
+        assertNotNull(result.getCreatedVoters().get(0).getVoterId(), "Voter ID must be generated");
+    }
+
+    @Test
+    void testGeminiAiPromptParsingLive() {
+        Admin admin = new Admin("gemini_test_admin", passwordEncoder.encode("pass"), "Super", "Admin", "photo.png", "SUPER_ADMIN", "ALL", "Super Admin");
+        com.votesystem.dto.AiElectionPlan plan = geminiAiService.generatePlanFromPrompt(
+                "Schedule election for Wipro Cultural Secretary from 2 PM to 5 PM with candidate Vikram and 2 voters",
+                admin
+        );
+
+        assertNotNull(plan, "Plan must be parsed by Gemini");
+        assertNotNull(plan.getSummary(), "Summary should be generated");
+        assertFalse(plan.getPositions().isEmpty(), "Position should be recognized");
+        assertFalse(plan.getCandidates().isEmpty(), "Candidate should be recognized");
+        assertFalse(plan.getVoters().isEmpty(), "Voters should be recognized");
     }
 }

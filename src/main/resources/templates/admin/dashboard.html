@@ -173,6 +173,43 @@
             </div>
         </div>
 
+        <!-- Google Gemini AI Election Copilot Quick Banner -->
+        <div class="glass-card p-3 mb-4 rounded-4 shadow-sm" style="background: linear-gradient(135deg, rgba(238, 242, 255, 0.95), rgba(245, 243, 255, 0.95)); border: 1.5px solid #818cf8;">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 text-white rounded-4 shadow-sm" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                        <i class="fa-solid fa-wand-magic-sparkles fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-primary rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-robot me-1"></i> Google Gemini AI Copilot
+                            </span>
+                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 rounded-pill px-2 py-1 small">
+                                <i class="fa-solid fa-bolt me-1"></i> Ready
+                            </span>
+                            <span class="badge bg-dark rounded-pill px-2 py-1 small" th:text="${activeOrg != null and activeOrg != 'ALL' ? 'Target: ' + activeOrg : 'Universal'}">
+                                Target: Infosys
+                            </span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-0">Create Users, Candidates &amp; Schedules via Plain English Prompt</h5>
+                        <p class="text-muted small mb-0">
+                            Ask Gemini AI to schedule election deadlines, create ballot positions, register candidates, and provision voters with one prompt.
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#geminiAiModal"
+                            style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Open AI Copilot ⚡
+                    </button>
+                    <a href="/admin/ai-assistant" class="btn btn-outline-primary rounded-pill px-3 shadow-sm btn-sm fw-semibold">
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Full AI Studio
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Alerts -->
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-3 py-2 px-3 small" role="alert">
             <i class="fa-solid fa-triangle-exclamation me-1"></i> <span th:text="${error}"></span>
@@ -771,6 +808,177 @@
         </div>
     </div>
 
+    <!-- Gemini AI Copilot Modal -->
+    <div class="modal fade" id="geminiAiModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom p-4" style="background: linear-gradient(135deg, rgba(238, 242, 255, 0.95), rgba(245, 243, 255, 0.95));">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 rounded-3 text-white shadow-sm" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                            <i class="fa-solid fa-wand-magic-sparkles fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-0">Google Gemini AI Election Copilot</h5>
+                            <span class="badge bg-primary rounded-pill px-2 py-1 small">
+                                <i class="fa-solid fa-robot me-1"></i> Gemini 3.1 Flash
+                            </span>
+                            <span class="badge bg-dark rounded-pill px-2 py-1 small" th:text="'Scope: ' + ${activeOrg}">
+                                Scope: Infosys
+                            </span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Prompt Form Area -->
+                    <div id="modalAiFormContainer">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted mb-2">
+                                <i class="fa-solid fa-lightbulb text-warning me-1"></i> Quick Presets (Click to Load):
+                            </label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                        onclick="loadModalPrompt('Schedule an election for Infosys Cultural Secretary from 2 PM to 5 PM today with 2 candidates: Priya Sharma and Rohan Verma. Also create 3 voters for Infosys.')">
+                                    ⚡ Infosys 3-hr election + 2 Cand + 3 Voters
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3"
+                                        onclick="loadModalPrompt('Register 5 voters for Wipro in Engineering department: Amit Patel, Neha Rao, Vikram Singh, Sneha Roy, and Rahul Gupta.')">
+                                    👥 Register 5 Wipro Engineering Voters
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3"
+                                        onclick="loadModalPrompt('Schedule election for Invation Hub starting now and ending in 3 hours with position Event Coordinator and candidate Sarah Jenkins.')">
+                                    ⏰ 3-Hour Flash Election for Invation Hub
+                                </button>
+                            </div>
+                        </div>
+
+                        <form id="modalAiPromptForm" onsubmit="handleModalAiSubmit(event)">
+                            <div class="mb-3">
+                                <label for="modalAiPromptInput" class="form-label fw-bold text-dark small">
+                                    Natural Language Instruction:
+                                </label>
+                                <textarea id="modalAiPromptInput" class="form-control rounded-4 p-3" rows="5"
+                                          placeholder="Type prompt in plain English...
+e.g. 'Schedule election for Google starting now for 4 hours. Add position Tech Lead with candidates Alex and Maya. Generate 5 voters in Engineering department.'"
+                                          required style="font-size: 0.95rem; resize: vertical; border: 1.5px solid #cbd5e1;"></textarea>
+                            </div>
+
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="modalExecuteToggle" checked>
+                                    <label class="form-check-label small fw-semibold text-dark" for="modalExecuteToggle">
+                                        Execute Immediately into Database
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-link text-muted p-0 text-decoration-none" onclick="document.getElementById('modalAiPromptInput').value = ''">
+                                    <i class="fa-solid fa-eraser me-1"></i> Clear
+                                </button>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" id="modalSubmitPromptBtn" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm"
+                                        style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Process with Gemini AI Copilot
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Loading Spinner -->
+                    <div id="modalAiLoadingBox" class="text-center py-5 d-none">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">Gemini AI is Reasoning &amp; Provisioning...</h5>
+                        <p class="text-muted small mb-0" id="modalAiLoadingStep">Transmitting prompt to Google Gemini 3.1 Flash AI...</p>
+                    </div>
+
+                    <!-- Results Container -->
+                    <div id="modalAiResultsBox" class="d-none">
+                        <div class="alert alert-primary rounded-4 p-3 mb-3 border-0 shadow-sm" style="background: #eef2ff;">
+                            <div class="fw-bold text-primary mb-1"><i class="fa-solid fa-quote-left me-1"></i> AI Action Summary:</div>
+                            <div id="modalResultSummary" class="text-dark small">Summary goes here...</div>
+                        </div>
+
+                        <!-- Metrics Badges -->
+                        <div class="row g-2 mb-3 text-center">
+                            <div class="col-4">
+                                <div class="p-2 rounded-3 bg-light border">
+                                    <div class="text-muted small">Positions</div>
+                                    <div id="modalResPosCount" class="fw-bold text-dark fs-5">0</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 rounded-3 bg-light border">
+                                    <div class="text-muted small">Candidates</div>
+                                    <div id="modalResCandCount" class="fw-bold text-dark fs-5">0</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 rounded-3 bg-light border">
+                                    <div class="text-muted small">Voters Created</div>
+                                    <div id="modalResVoterCount" class="fw-bold text-dark fs-5">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Box -->
+                        <div id="modalScheduleResultBox" class="p-3 rounded-4 mb-3 border d-none" style="background: #f8fafc;">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="fw-bold small text-dark"><i class="fa-solid fa-clock text-warning me-1"></i> Election Schedule Activated</span>
+                                <span class="badge bg-success rounded-pill">LIVE TIMED</span>
+                            </div>
+                            <div class="small text-muted">
+                                Polls Open: <strong id="modalResStartTime" class="text-dark">-</strong> &bull; 
+                                Deadline: <strong id="modalResEndTime" class="text-danger">-</strong>
+                            </div>
+                        </div>
+
+                        <!-- Positions & Candidates lists -->
+                        <div class="mb-3" id="modalPositionsCandResultBox">
+                            <div class="small fw-bold text-dark mb-1">Created Entities:</div>
+                            <div id="modalResPositionsList" class="d-flex flex-wrap gap-1 mb-2"></div>
+                            <div id="modalResCandidatesList" class="d-flex flex-wrap gap-1"></div>
+                        </div>
+
+                        <!-- Generated Voters Table -->
+                        <div class="mb-3" id="modalVotersTableBox">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="small fw-bold text-dark"><i class="fa-solid fa-id-card me-1 text-primary"></i> Generated Voters &amp; Passcodes</span>
+                                <button class="btn btn-link btn-sm p-0 text-decoration-none fw-semibold" onclick="copyAllModalVoters()">
+                                    <i class="fa-solid fa-copy me-1"></i> Copy All Voter IDs
+                                </button>
+                            </div>
+                            <div class="table-responsive rounded-3 border" style="max-height: 200px; overflow-y: auto;">
+                                <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>Voter ID</th>
+                                            <th>Name</th>
+                                            <th>Dept / Org</th>
+                                            <th>Password</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modalResVotersTbody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="resetModalStudio()">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Another Prompt
+                            </button>
+                            <button class="btn btn-success btn-sm rounded-pill px-4 fw-bold" onclick="window.location.reload()">
+                                <i class="fa-solid fa-rotate me-1"></i> Done &amp; Refresh Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Voter Access QR Code Modal -->
     <div class="modal fade" id="voterQrModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -903,6 +1111,142 @@
             }
             updateAdminTimer();
         }
+        // ==================== GEMINI AI COPILOT MODAL HANDLERS ====================
+        let currentModalVoters = [];
+
+        function loadModalPrompt(text) {
+            const input = document.getElementById('modalAiPromptInput');
+            if (input) {
+                input.value = text;
+                input.focus();
+            }
+        }
+
+        async function handleModalAiSubmit(event) {
+            event.preventDefault();
+            const prompt = document.getElementById('modalAiPromptInput').value.trim();
+            if (!prompt) return;
+
+            const executeDirectly = document.getElementById('modalExecuteToggle').checked;
+            const submitBtn = document.getElementById('modalSubmitPromptBtn');
+            const formContainer = document.getElementById('modalAiFormContainer');
+            const loadingBox = document.getElementById('modalAiLoadingBox');
+            const resultsBox = document.getElementById('modalAiResultsBox');
+            const loadingStep = document.getElementById('modalAiLoadingStep');
+
+            submitBtn.disabled = true;
+            formContainer.classList.add('d-none');
+            loadingBox.classList.remove('d-none');
+            resultsBox.classList.add('d-none');
+
+            loadingStep.innerText = 'Transmitting prompt to Google Gemini 3.1 Flash AI...';
+            const t1 = setTimeout(() => { loadingStep.innerText = 'Extracting election schedule, positions, candidates, and voters...'; }, 1200);
+            const t2 = setTimeout(() => { loadingStep.innerText = 'Provisioning database records and cryptographic voter keys...'; }, 2400);
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('prompt', prompt);
+                formData.append('execute', executeDirectly ? 'true' : 'false');
+
+                const response = await fetch('/admin/ai/prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+
+                clearTimeout(t1);
+                clearTimeout(t2);
+
+                const data = await response.json();
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.message || 'AI request failed');
+                }
+
+                renderModalAiResults(data);
+
+            } catch (err) {
+                alert('Gemini AI Error: ' + err.message);
+                formContainer.classList.remove('d-none');
+            } finally {
+                submitBtn.disabled = false;
+                loadingBox.classList.add('d-none');
+            }
+        }
+
+        function renderModalAiResults(data) {
+            const resultsBox = document.getElementById('modalAiResultsBox');
+            resultsBox.classList.remove('d-none');
+
+            document.getElementById('modalResultSummary').innerText = data.summary || data.message || 'Operation completed successfully.';
+            document.getElementById('modalResPosCount').innerText = data.positionsCreated || 0;
+            document.getElementById('modalResCandCount').innerText = data.candidatesCreated || 0;
+            document.getElementById('modalResVoterCount').innerText = data.votersCreated || 0;
+
+            const schedBox = document.getElementById('modalScheduleResultBox');
+            if (data.scheduleUpdated) {
+                schedBox.classList.remove('d-none');
+                document.getElementById('modalResStartTime').innerText = data.formattedStartTime || 'Now';
+                document.getElementById('modalResEndTime').innerText = data.formattedEndTime || 'Set';
+            } else {
+                schedBox.classList.add('d-none');
+            }
+
+            const posList = document.getElementById('modalResPositionsList');
+            posList.innerHTML = '';
+            if (data.createdPositions && data.createdPositions.length > 0) {
+                data.createdPositions.forEach(p => {
+                    posList.innerHTML += `<span class="badge bg-primary rounded-pill px-3 py-1 me-1"><i class="fa-solid fa-sitemap me-1"></i>${p}</span>`;
+                });
+            }
+
+            const candList = document.getElementById('modalResCandidatesList');
+            candList.innerHTML = '';
+            if (data.createdCandidates && data.createdCandidates.length > 0) {
+                data.createdCandidates.forEach(c => {
+                    candList.innerHTML += `<span class="badge bg-success rounded-pill px-3 py-1 me-1"><i class="fa-solid fa-user-tie me-1"></i>${c}</span>`;
+                });
+            }
+
+            const tbody = document.getElementById('modalResVotersTbody');
+            tbody.innerHTML = '';
+            currentModalVoters = data.createdVoters || [];
+
+            if (currentModalVoters.length > 0) {
+                document.getElementById('modalVotersTableBox').classList.remove('d-none');
+                currentModalVoters.forEach(v => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <span class="font-monospace fw-bold text-primary">${v.voterId}</span>
+                                <button class="btn btn-link btn-sm p-0 ms-1 text-secondary" title="Copy Voter ID" onclick="navigator.clipboard.writeText('${v.voterId}')">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </td>
+                            <td>${v.name}</td>
+                            <td><span class="badge bg-light text-dark border">${v.department} (${v.organization})</span></td>
+                            <td><code>${v.initialPassword}</code></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                document.getElementById('modalVotersTableBox').classList.add('d-none');
+            }
+        }
+
+        function copyAllModalVoters() {
+            if (!currentModalVoters || currentModalVoters.length === 0) return;
+            const text = currentModalVoters.map(v => `${v.voterId} | ${v.name} | ${v.initialPassword} | ${v.organization}`).join('\n');
+            navigator.clipboard.writeText(text);
+            alert(`Copied ${currentModalVoters.length} voter credentials to clipboard!`);
+        }
+
+        function resetModalStudio() {
+            document.getElementById('modalAiResultsBox').classList.add('d-none');
+            document.getElementById('modalAiFormContainer').classList.remove('d-none');
+            document.getElementById('modalAiPromptInput').value = '';
+            document.getElementById('modalAiPromptInput').focus();
+        }
+
         /*]]>*/
     </script>
 </body>

@@ -43,6 +43,7 @@ A modern, enterprise-grade electronic voting management system rebuilt in **Java
 | **Live Turnout & Chart.js Analytics** | Real-time bar and doughnut charts with voter turnout percentage and live AJAX result polling. |
 | **Election Lifecycle Control** | State machine allowing administrators to switch election states between `ACTIVE`, `PAUSED`, and `CONCLUDED` (sealed). |
 | **Certified Election Certificate** | Printable official certified election results report (`/admin/print`) with organization profile, winner declarations, and digital seal. |
+| **Google Gemini AI Election Copilot** | Natural language AI assistant powered by **Gemini 3.1 Flash**. Administrators can schedule election windows, define offices, add candidates, and batch-provision voters simply by giving an English prompt. |
 
 ---
 
@@ -138,6 +139,10 @@ The platform exposes clearly demarcated, role-guarded endpoints across the Voter
 | `GET` | `/admin/organizers` | Super Admin | Multi-tenant organizer governance portal managing all registered organizations. |
 | `POST` | `/admin/organizers/save` | Super Admin | Creates or edits organization organizer accounts and tenant privileges. |
 | `POST` | `/admin/organizers/delete/{id}` | Super Admin | Removes organizer credentials while retaining scoped election records. |
+| `POST` | `/admin/organization/delete-election` | Super Admin | Purges all candidates, positions, and votes for a specific tenant organization. |
+| `GET` | `/admin/ai-assistant` | Admin | Dedicated full-page **Gemini AI Election Copilot Studio** with prompt presets and live execution reports. |
+| `POST` | `/admin/ai/prompt` | Admin | REST API endpoint executing natural language election setup commands via **Google Gemini 3.1 Flash AI**. |
+| `POST` | `/admin/ai/prompt-submit` | Admin | Form submission endpoint for Gemini AI prompt execution with flash redirection. |
 | `POST` | `/admin/organization/delete-election` | Super Admin | Cascade purges entire election tenant (positions, candidates, and votes). |
 
 ---

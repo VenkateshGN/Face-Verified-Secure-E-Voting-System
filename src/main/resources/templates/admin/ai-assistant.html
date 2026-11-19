@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Gemini AI Election Copilot - Admin Control Center')}"></head>
+<body class="d-flex flex-column min-vh-100">
+    <div th:replace="~{fragments/layout :: adminNavbar}"></div>
+
+    <main class="container-fluid px-4 py-4 flex-grow-1">
+        
+        <!-- Header Banner -->
+        <div class="glass-card p-4 mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, rgba(238, 242, 255, 0.95), rgba(245, 243, 255, 0.95)); border-left: 6px solid #6366f1 !important;">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 shadow-sm text-white" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                        <i class="fa-solid fa-wand-magic-sparkles fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-primary rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-robot me-1"></i> Google Gemini 3.1 Flash AI
+                            </span>
+                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 rounded-pill px-3 py-1">
+                                <i class="fa-solid fa-bolt me-1"></i> Live Integration Active
+                            </span>
+                            <span class="badge bg-dark rounded-pill px-3 py-1" th:text="'Scope: ' + ${adminOrg}">
+                                Scope: Infosys
+                            </span>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-1">Gemini AI Natural Language Election Copilot</h3>
+                        <p class="text-muted small mb-0">
+                            Give instructions in plain English to schedule voting time windows, create ballot positions, register candidates, and batch-provision voters with cryptographic tokens.
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="/admin/dashboard" class="btn btn-outline-secondary rounded-pill px-3 btn-sm">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                    <a href="/admin/voters" class="btn btn-outline-primary rounded-pill px-3 btn-sm">
+                        <i class="fa-solid fa-users me-1"></i> Voters Directory
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show rounded-4 py-3 px-4 shadow-sm" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2 fs-5"></i> <strong th:text="${error}"></strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show rounded-4 py-3 px-4 shadow-sm" role="alert">
+            <i class="fa-solid fa-circle-check me-2 fs-5"></i> <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: AI Prompt Console -->
+            <div class="col-lg-6">
+                <div class="glass-card p-4 h-100 shadow-sm border-0">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <h5 class="fw-bold text-dark mb-0">
+                            <i class="fa-solid fa-terminal text-primary me-2"></i> Prompt Studio
+                        </h5>
+                        <span class="badge bg-light text-dark border">
+                            <i class="fa-solid fa-microchip me-1 text-primary"></i> Multi-Tenant Isolated
+                        </span>
+                    </div>
+
+                    <!-- Preset Chips -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted mb-2">
+                            <i class="fa-solid fa-lightbulb text-warning me-1"></i> Instant Prompt Templates (Click to Load):
+                        </label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 text-start prompt-chip"
+                                    onclick="loadPrompt(this.dataset.prompt)"
+                                    data-prompt="Schedule an election for Infosys Cultural Secretary from 2 PM to 5 PM today with 2 candidates: Priya Sharma and Rohan Verma. Also create 3 voters for Infosys.">
+                                ⚡ <span class="fw-semibold">Infosys Election + 2 Cand + 3 Voters</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 text-start prompt-chip"
+                                    onclick="loadPrompt(this.dataset.prompt)"
+                                    data-prompt="Register 5 voters for Wipro in Engineering department: Amit Patel, Neha Rao, Vikram Singh, Sneha Roy, and Rahul Gupta.">
+                                👥 <span class="fw-semibold">Register 5 Wipro Engineering Voters</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 text-start prompt-chip"
+                                    onclick="loadPrompt(this.dataset.prompt)"
+                                    data-prompt="Schedule election for Invation Hub starting now and ending in 3 hours with position Event Organizer and candidate Sarah Jenkins.">
+                                ⏰ <span class="fw-semibold">3-Hour Flash Election for Invation Hub</span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 text-start prompt-chip"
+                                    onclick="loadPrompt(this.dataset.prompt)"
+                                    data-prompt="Create Student Council Election for CRCE College with positions: President (max 1 vote) and General Secretary (max 1 vote). Add candidates Alex Rivera for President and Maya Lin for General Secretary. Register 4 student voters.">
+                                🎓 <span class="fw-semibold">University Council: 2 Positions + 4 Voters</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Prompt Input Form -->
+                    <form id="aiPromptForm" onsubmit="handleAiSubmit(event)">
+                        <div class="mb-3">
+                            <label for="aiPromptInput" class="form-label fw-bold text-dark small">
+                                Natural Language Instruction:
+                            </label>
+                            <textarea id="aiPromptInput" name="prompt" class="form-control rounded-4 p-3 shadow-inner" rows="6"
+                                      placeholder="Type your election requirement in plain English...
+e.g., 'Schedule election for Google starting now and ending in 4 hours. Add position Tech Lead with candidates Alex and Dev. Register 5 voters in Engineering department.'"
+                                      required style="font-size: 0.95rem; resize: vertical; border: 1.5px solid #cbd5e1;"></textarea>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="executeToggle" checked>
+                                <label class="form-check-label small fw-semibold text-dark" for="executeToggle">
+                                    Execute Immediately into Database
+                                </label>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-link text-muted p-0 text-decoration-none" onclick="document.getElementById('aiPromptInput').value = ''">
+                                <i class="fa-solid fa-eraser me-1"></i> Clear
+                            </button>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" id="submitPromptBtn" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm"
+                                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
+                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Process with Gemini AI Copilot
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Loading State Indicator -->
+                    <div id="aiLoadingBox" class="text-center py-5 d-none">
+                        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">Gemini AI is Reasoning &amp; Provisioning...</h5>
+                        <p class="text-muted small mb-0" id="aiLoadingStep">Connecting to Google Gemini API via Secure Gateway...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Results & Output Display -->
+            <div class="col-lg-6">
+                <!-- Idle State Placeholder -->
+                <div id="idleStateBox" class="glass-card p-5 h-100 text-center d-flex flex-column justify-content-center align-items-center border-0 shadow-sm" style="min-height: 480px;">
+                    <div class="p-4 rounded-circle bg-light border mb-3 text-primary shadow-sm" style="width: 90px; height: 90px; display: grid; place-items: center;">
+                        <i class="fa-solid fa-brain fa-3x" style="color: #6366f1;"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">AI Workspace Ready</h5>
+                    <p class="text-muted small max-w-sm mb-4" style="max-width: 360px;">
+                        Select a template on the left or enter a custom prompt. Gemini AI will automatically translate your text into database schedules, positions, candidates, and secure voter credentials.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="loadPrompt('Schedule an election for Infosys Cultural Secretary from 2 PM to 5 PM today with 2 candidates: Priya Sharma and Rohan Verma. Also create 3 voters for Infosys.')">
+                            <i class="fa-solid fa-play me-1"></i> Try Sample Prompt
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Results Panel -->
+                <div id="resultsCard" class="glass-card p-4 h-100 shadow-sm border-0 d-none">
+                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                        <h5 class="fw-bold text-success mb-0">
+                            <i class="fa-solid fa-circle-check me-2"></i> Execution Report
+                        </h5>
+                        <a href="/admin/dashboard" class="btn btn-sm btn-success rounded-pill px-3">
+                            <i class="fa-solid fa-gauge me-1"></i> Open Dashboard
+                        </a>
+                    </div>
+
+                    <!-- Summary Alert -->
+                    <div class="alert alert-primary rounded-4 p-3 mb-3 border-0 shadow-sm" style="background: #eef2ff;">
+                        <div class="fw-bold text-primary mb-1"><i class="fa-solid fa-quote-left me-1"></i> AI Action Summary:</div>
+                        <div id="resultSummary" class="text-dark small">Summary goes here...</div>
+                    </div>
+
+                    <!-- Metrics Badges -->
+                    <div class="row g-2 mb-3 text-center">
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 bg-light border">
+                                <div class="text-muted small">Positions</div>
+                                <div id="resPosCount" class="fw-bold text-dark fs-5">0</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 bg-light border">
+                                <div class="text-muted small">Candidates</div>
+                                <div id="resCandCount" class="fw-bold text-dark fs-5">0</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 rounded-3 bg-light border">
+                                <div class="text-muted small">Voters Created</div>
+                                <div id="resVoterCount" class="fw-bold text-dark fs-5">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule Status Details -->
+                    <div id="scheduleResultBox" class="p-3 rounded-4 mb-3 border d-none" style="background: #f8fafc;">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="fw-bold small text-dark"><i class="fa-solid fa-clock text-warning me-1"></i> Election Schedule Activated</span>
+                            <span class="badge bg-success rounded-pill">LIVE TIMED</span>
+                        </div>
+                        <div class="small text-muted">
+                            Polls Open: <strong id="resStartTime" class="text-dark">-</strong> &bull; 
+                            Deadline: <strong id="resEndTime" class="text-danger">-</strong>
+                        </div>
+                    </div>
+
+                    <!-- Positions & Candidates lists -->
+                    <div class="mb-3" id="positionsCandResultBox">
+                        <div class="small fw-bold text-dark mb-1">Created Entities:</div>
+                        <div id="resPositionsList" class="d-flex flex-wrap gap-1 mb-2"></div>
+                        <div id="resCandidatesList" class="d-flex flex-wrap gap-1"></div>
+                    </div>
+
+                    <!-- Generated Voters Table -->
+                    <div class="mb-3" id="votersTableBox">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-bold text-dark"><i class="fa-solid fa-id-card me-1 text-primary"></i> Generated Voters &amp; Passcodes</span>
+                            <button class="btn btn-link btn-sm p-0 text-decoration-none fw-semibold" onclick="copyAllVoters()">
+                                <i class="fa-solid fa-copy me-1"></i> Copy All Voter IDs
+                            </button>
+                        </div>
+                        <div class="table-responsive rounded-3 border" style="max-height: 220px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Voter ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Dept / Org</th>
+                                        <th>Password</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resVotersTbody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted fst-italic mt-1 d-block">
+                            * All voters initialized with default testing password: <code>password123</code>
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end pt-2 border-top">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="resetStudio()">
+                            <i class="fa-solid fa-rotate-left me-1"></i> New Prompt
+                        </button>
+                        <a href="/admin/dashboard" class="btn btn-primary btn-sm rounded-pill px-4">
+                            <i class="fa-solid fa-check me-1"></i> Done &amp; View Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent AI Provisioning Audit Logs -->
+        <div class="glass-card p-4 mt-4 shadow-sm border-0">
+            <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-shield-halved text-success me-2"></i> Recent Gemini AI Automated Operations Audit Trail
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>Client IP</th>
+                            <th>Cryptographic Hash / Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${recentAiLogs}">
+                            <td class="text-muted small" th:text="${#temporals.format(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}">2026-11-19 11:00</td>
+                            <td>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1">
+                                    <i class="fa-solid fa-robot me-1"></i> <span th:text="${log.action}">AI Action</span>
+                                </span>
+                            </td>
+                            <td class="small" th:text="${log.ipAddress}">127.0.0.1</td>
+                            <td class="small text-secondary" th:text="${log.details}">Details of automated action</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(recentAiLogs)}">
+                            <td colspan="4" class="text-center text-muted py-3">
+                                No AI operations recorded yet. Try running your first prompt above!
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: footer}"></div>
+
+    <script th:inline="javascript">
+        let currentCreatedVoters = [];
+
+        function loadPrompt(text) {
+            const input = document.getElementById('aiPromptInput');
+            input.value = text;
+            input.focus();
+            input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function handleAiSubmit(event) {
+            event.preventDefault();
+            const prompt = document.getElementById('aiPromptInput').value.trim();
+            if (!prompt) return;
+
+            const executeDirectly = document.getElementById('executeToggle').checked;
+            const submitBtn = document.getElementById('submitPromptBtn');
+            const loadingBox = document.getElementById('aiLoadingBox');
+            const promptForm = document.getElementById('aiPromptForm');
+            const idleBox = document.getElementById('idleStateBox');
+            const resultsCard = document.getElementById('resultsCard');
+            const loadingStep = document.getElementById('aiLoadingStep');
+
+            submitBtn.disabled = true;
+            promptForm.classList.add('d-none');
+            loadingBox.classList.remove('d-none');
+            idleBox.classList.add('d-none');
+            resultsCard.classList.add('d-none');
+
+            loadingStep.innerText = 'Transmitting prompt to Google Gemini 3.1 Flash AI...';
+
+            const stepTimer = setTimeout(() => {
+                loadingStep.innerText = 'Extracting election schedule, candidates, and voter specifications...';
+            }, 1200);
+
+            const stepTimer2 = setTimeout(() => {
+                loadingStep.innerText = 'Provisioning database records and generating cryptographic voter keys...';
+            }, 2500);
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('prompt', prompt);
+                formData.append('execute', executeDirectly ? 'true' : 'false');
+
+                const response = await fetch('/admin/ai/prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+
+                clearTimeout(stepTimer);
+                clearTimeout(stepTimer2);
+
+                const data = await response.json();
+
+                if (!response.ok || (data.success === false)) {
+                    throw new Error(data.message || 'AI request failed');
+                }
+
+                // Render Results
+                renderAiResults(data);
+
+            } catch (err) {
+                alert('Gemini AI Error: ' + err.message);
+                promptForm.classList.remove('d-none');
+                idleBox.classList.remove('d-none');
+            } finally {
+                submitBtn.disabled = false;
+                loadingBox.classList.add('d-none');
+            }
+        }
+
+        function renderAiResults(data) {
+            const idleBox = document.getElementById('idleStateBox');
+            const resultsCard = document.getElementById('resultsCard');
+            const promptForm = document.getElementById('aiPromptForm');
+
+            idleBox.classList.add('d-none');
+            resultsCard.classList.remove('d-none');
+            promptForm.classList.remove('d-none');
+
+            document.getElementById('resultSummary').innerText = data.summary || data.message || 'Operation executed successfully.';
+            document.getElementById('resPosCount').innerText = data.positionsCreated || 0;
+            document.getElementById('resCandCount').innerText = data.candidatesCreated || 0;
+            document.getElementById('resVoterCount').innerText = data.votersCreated || 0;
+
+            // Schedule display
+            const schedBox = document.getElementById('scheduleResultBox');
+            if (data.scheduleUpdated) {
+                schedBox.classList.remove('d-none');
+                document.getElementById('resStartTime').innerText = data.formattedStartTime || 'Now';
+                document.getElementById('resEndTime').innerText = data.formattedEndTime || 'Set';
+            } else {
+                schedBox.classList.add('d-none');
+            }
+
+            // Positions badges
+            const posList = document.getElementById('resPositionsList');
+            posList.innerHTML = '';
+            if (data.createdPositions && data.createdPositions.length > 0) {
+                data.createdPositions.forEach(p => {
+                    posList.innerHTML += `<span class="badge bg-primary rounded-pill px-3 py-1 me-1"><i class="fa-solid fa-sitemap me-1"></i>${p}</span>`;
+                });
+            }
+
+            // Candidates badges
+            const candList = document.getElementById('resCandidatesList');
+            candList.innerHTML = '';
+            if (data.createdCandidates && data.createdCandidates.length > 0) {
+                data.createdCandidates.forEach(c => {
+                    candList.innerHTML += `<span class="badge bg-success rounded-pill px-3 py-1 me-1"><i class="fa-solid fa-user-tie me-1"></i>${c}</span>`;
+                });
+            }
+
+            // Voters Table
+            const tbody = document.getElementById('resVotersTbody');
+            tbody.innerHTML = '';
+            currentCreatedVoters = data.createdVoters || [];
+
+            if (currentCreatedVoters.length > 0) {
+                document.getElementById('votersTableBox').classList.remove('d-none');
+                currentCreatedVoters.forEach(v => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <span class="font-monospace fw-bold text-primary">${v.voterId}</span>
+                                <button class="btn btn-link btn-sm p-0 ms-1 text-secondary" title="Copy Voter ID" onclick="navigator.clipboard.writeText('${v.voterId}')">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </td>
+                            <td>${v.name}</td>
+                            <td class="text-muted">${v.email}</td>
+                            <td><span class="badge bg-light text-dark border">${v.department} (${v.organization})</span></td>
+                            <td><code>${v.initialPassword}</code></td>
+                        </tr>
+                    `;
+                });
+            } else {
+                document.getElementById('votersTableBox').classList.add('d-none');
+            }
+        }
+
+        function copyAllVoters() {
+            if (!currentCreatedVoters || currentCreatedVoters.length === 0) return;
+            const text = currentCreatedVoters.map(v => `${v.voterId} | ${v.name} | ${v.initialPassword} | ${v.organization}`).join('\n');
+            navigator.clipboard.writeText(text);
+            alert(`Copied ${currentCreatedVoters.length} voter credentials to clipboard!`);
+        }
+
+        function resetStudio() {
+            document.getElementById('resultsCard').classList.add('d-none');
+            document.getElementById('idleStateBox').classList.remove('d-none');
+            document.getElementById('aiPromptInput').value = '';
+            document.getElementById('aiPromptInput').focus();
+        }
+    </script>
+</body>
+</html>
